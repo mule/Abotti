@@ -1,4 +1,4 @@
-using BlazorApp.AiServices;
+using ChatGptBlazorApp.AiServices;
 using ChatGptBlazorApp.Data;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;

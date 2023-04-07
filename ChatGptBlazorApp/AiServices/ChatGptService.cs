@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components;
 
-namespace BlazorApp.AiServices;
+namespace ChatGptBlazorApp.AiServices;
 
 /// <summary>
 /// Service to access ChatGpt API
