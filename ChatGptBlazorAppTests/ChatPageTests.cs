@@ -21,7 +21,7 @@ public class ChatPageTests
     [Fact]
     public async Task ShouldRenderPageCorrectly()
     {
-        var url = "https://localhost:5000";
+        var url = "http://localhost:5000";
 
 
         // Create the host factory with the App class as parameter and the
@@ -53,12 +53,8 @@ public class ChatPageTests
             async (page) =>
             {
                 // Apply the test logic on the given page.
-
-                // Click text=Home
-                await page.Locator("text=Home").ClickAsync();
-                await page.WaitForURLAsync($"{url}/Chat");
-                await page.Locator("h3:has-text(\"Chat\"").IsVisibleAsync();
-
+                await page.GotoAsync($"{url}/Chat");
+                await page.Locator("h3:has-text(\"Chat\")").IsVisibleAsync();
             },
             Browser.Chromium);
     }
