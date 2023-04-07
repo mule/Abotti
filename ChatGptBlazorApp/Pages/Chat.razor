@@ -1,0 +1,31 @@
+@page "/Chat"
+@using AiServices
+@inject ChatGptService ChatGptService
+<h3>Chat</h3>
+
+<textarea id="chatInput" @bind="currentPrompt" rows="4" cols="50"></textarea>
+<button @onclick="Send">Send</button>
+
+<div id="chatOutput">
+    <ul>
+        @foreach(var reply in replies)
+        {
+            <li>@reply</li>
+        }
+    </ul>
+</div>
+
+
+
+@code {
+    string currentPrompt = "";
+    List<string> replies = new List<string>();
+    
+    private async void Send()
+    {
+        var response = await ChatGptService.GetResponseAsync(currentPrompt);
+        replies.Add(response);
+        currentPrompt = String.Empty;
+    }
+    
+}
