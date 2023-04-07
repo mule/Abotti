@@ -1,0 +1,36 @@
+# Ignore build artifacts
+/bin/
+/obj/
+
+# Ignore user-specific files
+*.user
+
+# Ignore NuGet packages
+*.nuget.props
+*.nuget.targets
+packages/
+*.nupkg
+
+# Ignore Visual Studio files
+.vs/
+*.suo
+*.csproj.user
+*.userprefs
+*.sln.docstates
+
+# Rider files
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Ignore Rider build artifacts
+*.csproj.nuget.cache
+*.csproj.nuget.dgspec.json
+*.csproj.nuget.g.props
+*.csproj.nuget.g.targets
+*.csproj.nuget.props
+*.csproj.nuget.targets
+*.csproj.nuget.user
+*.csproj.nuget.user.props
+*.csproj.nuget.user.targets
