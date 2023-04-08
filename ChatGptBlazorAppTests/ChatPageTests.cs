@@ -1,10 +1,4 @@
-using System.Reflection;
-using System.Runtime.CompilerServices;
 using Microsoft.AspNetCore.Hosting;
-using System.Threading.Tasks;
-using ChatGptBlazorApp.AiServices;
-using Microsoft.Playwright;
-using Xunit;
 
 namespace ChatGptBlazorAppTests;
 
@@ -17,17 +11,17 @@ public class ChatPageTests
     {
         this.playwrightFixture = playwrightFixture;
     }
-    
+
     [Fact]
     public async Task ShouldRenderPageCorrectly()
     {
-        var url = "http://localhost:5000";
+        var url = "http://127.0.0.1:5000";
 
 
         // Create the host factory with the App class as parameter and the
         // url we are going to use.
         using var hostFactory = new WebTestingHostFactory<AssemblyLocator>();
-        
+
         hostFactory
             // Override host configuration to mock stuff if required.
             .WithWebHostBuilder(builder =>
@@ -47,7 +41,7 @@ public class ChatPageTests
             })
             // Create the host using the CreateDefaultClient method.
             .CreateDefaultClient();
-        
+
         await playwrightFixture.GotoPageAsync(
             url,
             async (page) =>
@@ -58,5 +52,4 @@ public class ChatPageTests
             },
             Browser.Chromium);
     }
-    
 }
