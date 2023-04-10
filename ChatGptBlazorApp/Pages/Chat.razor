@@ -1,6 +1,6 @@
 @page "/Chat"
 @using ChatGptBlazorApp.AiServices
-@inject ChatGptService ChatGptService
+@inject OpenAiClient OpenAiClient
 <h3>Chat</h3>
 
 <textarea id="chatInput" @bind="currentPrompt" rows="4" cols="50"></textarea>
@@ -8,7 +8,7 @@
 
 <div id="chatOutput">
     <ul>
-        @foreach(var reply in replies)
+        @foreach (var reply in replies)
         {
             <li>@reply</li>
         }
@@ -16,16 +16,16 @@
 </div>
 
 
-
 @code {
     string currentPrompt = "";
-    List<string> replies = new List<string>();
-    
+    readonly List<string> replies = new();
+
     private async void Send()
     {
-        var response = await ChatGptService.GetResponseAsync(currentPrompt);
+        var response = await OpenAiClient.GetCompletion(currentPrompt);
         replies.Add(response);
-        currentPrompt = String.Empty;
+        currentPrompt = string.Empty;
+        StateHasChanged();
     }
-    
+
 }
