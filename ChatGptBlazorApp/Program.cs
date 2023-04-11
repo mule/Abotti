@@ -1,5 +1,4 @@
 using ChatGptBlazorApp.AiServices;
-using ChatGptBlazorApp.Data;
 using OpenAI.GPT3.Extensions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -10,7 +9,6 @@ builder.Configuration.AddUserSecrets<Program>();
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddSingleton<WeatherForecastService>();
 builder.Services.AddOpenAIService();
 builder.Services.AddScoped<OpenAiClient>();
 var app = builder.Build();
