@@ -3,10 +3,23 @@
 @inject OpenAiClient OpenAiClient
 <h3>Chat</h3>
 
-<textarea id="chatInput" @bind="currentPrompt" rows="4" cols="50"></textarea>
-<button @onclick="Send">Send</button>
+<form onsubmit="@Send">
+    <div class="row">
+        <textarea class="form-control"  id="chatInput" @bind="currentPrompt"></textarea>
+    </div>
+    <div class="row">
+        <div class="col-md-1">
+            <button type="submit" class="form-control mt-2 btn btn-primary">Send</button>
+        </div>
+    </div>
+</form>
 
-<div id="chatOutput">
+
+@if (waitingForResponse)
+{
+    <div class="row m-1">Waiting for response....</div>
+}
+<div class="row" id="chatOutput">
     <ul>
         @foreach (var reply in replies)
         {
@@ -17,15 +30,19 @@
 
 
 @code {
+
+    bool waitingForResponse;
     string currentPrompt = "";
     readonly List<string> replies = new();
 
-    private async void Send()
+    private async Task Send()
     {
+        waitingForResponse = true;
+        replies.Add($"User: {currentPrompt}");
         var response = await OpenAiClient.GetCompletion(currentPrompt);
         replies.Add(response);
         currentPrompt = string.Empty;
-        StateHasChanged();
+        waitingForResponse = false;
     }
 
 }
