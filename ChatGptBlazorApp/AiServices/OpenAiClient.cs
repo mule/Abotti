@@ -5,14 +5,16 @@ namespace ChatGptBlazorApp.AiServices;
 
 public class OpenAiClient : IOpenAiClient
 {
+    private readonly ILogger<OpenAiClient> _logger;
     private readonly IOpenAIService _openAiService;
 
-    public OpenAiClient(IOpenAIService openAiService)
+    public OpenAiClient(IOpenAIService openAiService, ILogger<OpenAiClient> logger)
     {
         _openAiService = openAiService;
+        _logger = logger;
     }
 
-    public async Task<string> GetCompletion(string prompt)
+    public async Task<(bool Success, string Response, string[] Errors)> GetCompletion(string prompt)
     {
         var request = new ChatCompletionCreateRequest
         {
@@ -25,13 +27,22 @@ public class OpenAiClient : IOpenAiClient
         };
         var completion = await _openAiService.ChatCompletion.CreateCompletion(request);
 
+        if (completion == null) _logger.LogError("Empty response from OpenAI");
+
+        if (!completion.Successful)
+        {
+            _logger.LogError("Errors from OpenAI: {Errors}", completion.Error?.Message);
+            return (false, "", new[] { completion.Error?.Message ?? "Unknown error" });
+        }
+
+
         if (completion.Choices.Any())
-            return completion.Choices.First().Message.Content;
-        return "No response";
+            return (true, completion.Choices.First().Message.Content, Array.Empty<string>());
+        return (true, "", Array.Empty<string>());
     }
 }
 
 public interface IOpenAiClient
 {
-    Task<string> GetCompletion(string prompt);
+    Task<(bool Success, string Response, string[] Errors)> GetCompletion(string prompt);
 }

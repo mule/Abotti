@@ -1,19 +1,40 @@
-﻿@inherits LayoutComponentBase
+﻿@inject AuthenticationStateProvider AuthenticationStateProvider
+@inherits LayoutComponentBase
+
 
 <PageTitle>ChatGptBlazorApp</PageTitle>
-
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
-
-    <main>
-        <div class="top-row px-4">
-            <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+<BlazoredToasts/>
+<ErrorBoundary>
+    <CascadingAuthenticationState>
+        <div class="page">
+            <div class="sidebar">
+                <NavMenu/>
+            </div>
+            <main>
+                <div class="top-row px-4 d-flex justify-content-end align-items-center w-100">
+                    <div class="d-flex align-items-center">
+                        <a class="mx-3" href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+                        <AuthorizeView>
+                            <Authorized>
+                                <p class="mx-3 mb-0">Hello, @context.User.Identity.Name!</p>
+                            </Authorized>
+                            <NotAuthorized>
+                                <button class="btn btn-primary mx-3" href="MicrosoftIdentity/Account/SignIn">Login</button>
+                            </NotAuthorized>
+                        </AuthorizeView>
+                    </div>
+                </div>
+                <article class="content px-4">
+                    @Body
+                </article>
+            </main>
         </div>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
-</div>
+    </CascadingAuthenticationState>
+</ErrorBoundary>
+
+@code {
+
+}
+
+```
