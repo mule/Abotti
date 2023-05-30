@@ -1,7 +1,10 @@
 @page "/Chat"
 @using ChatGptBlazorApp.AiServices
+@using Blazored.Toast.Services
 @attribute [Route("")]
 @inject OpenAiClient OpenAiClient
+@inject IToastService ToastService
+
 <h3>Chat</h3>
 
 <form onsubmit="@Send">
@@ -40,8 +43,14 @@
     {
         waitingForResponse = true;
         replies.Add($"User: {currentPrompt}");
-        var response = await OpenAiClient.GetCompletion(currentPrompt);
-        replies.Add(response);
+        var result = await OpenAiClient.GetCompletion(currentPrompt);
+
+        if (result.Success)
+            replies.Add(result.Response);
+        else
+        {
+            ToastService.ShowError(result.Errors.First());
+        }
         currentPrompt = string.Empty;
         waitingForResponse = false;
     }
