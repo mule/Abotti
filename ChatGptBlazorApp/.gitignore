@@ -34,3 +34,4 @@ packages/
 *.csproj.nuget.user
 *.csproj.nuget.user.props
 *.csproj.nuget.user.targets
+/logs/
