@@ -1,12 +1,14 @@
 @page "/Chat"
+@page "/Chat/{PromptId:guid}"
 @using ChatGptBlazorApp.AiServices
 @using Blazored.Toast.Services
-@attribute [Route("")]
 @inject OpenAiClient OpenAiClient
 @inject IToastService ToastService
 
 <h3>Chat</h3>
-
+<div>
+    @PromptId.ToString()
+</div>
 <form onsubmit="@Send">
     <div class="row">
         <textarea class="form-control"  id="chatInput" @bind="currentPrompt"></textarea>
@@ -34,6 +36,9 @@
 
 
 @code {
+
+    [Parameter]
+    public Guid? PromptId { get; set; }
 
     bool waitingForResponse;
     string currentPrompt = "";

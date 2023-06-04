@@ -1,6 +1,7 @@
 using Blazored.Toast;
 using ChatGptBlazorApp.AiServices;
 using ChatGptBlazorApp.Areas.Identity.Data;
+using ChatGptBlazorCore.Models;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
@@ -23,6 +24,15 @@ try
                            throw new InvalidOperationException(
                                "Connection string 'ChatGptBlazorAppContextConnection' not found.");
     var config = builder.Configuration;
+
+    var adminUserIdStr = builder.Configuration.GetValue<string>("AdminUser:Id");
+    var adminUserId = Guid.Parse(adminUserIdStr);
+    var adminUserName = builder.Configuration.GetValue<string>("AdminUser:UserName");
+
+    var testChatRepo = new InMemorySeededChatSessionRepository();
+    testChatRepo.AddChatSession(ChatSession.GenerateTestChatSession(adminUserId));
+    testChatRepo.AddChatSession(ChatSession.GenerateTestChatSession(adminUserId));
+    testChatRepo.AddChatSession(ChatSession.GenerateTestChatSession(adminUserId));
 
 
     builder.Host.UseSerilog();
@@ -58,6 +68,12 @@ try
         options.FallbackPolicy = options.DefaultPolicy;
     });
 
+    builder.Services.AddSingleton<IUserRepository, InMemorySeededUserRepository>(ctx =>
+        new InMemorySeededUserRepository(adminUserId, adminUserName));
+
+
+    builder.Services.AddSingleton<IChatSessionRepository, InMemorySeededChatSessionRepository>(ctx => testChatRepo);
+
     var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -91,6 +107,7 @@ finally
 {
     Log.CloseAndFlush();
 }
+
 
 public class AssemblyLocator
 {
