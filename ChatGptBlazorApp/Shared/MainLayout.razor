@@ -1,4 +1,7 @@
 ﻿@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IUserRepository UserRepository
+@inject IChatSessionRepository ChatSessionRepository
+@using ChatGptBlazorCore.Models
 @inherits LayoutComponentBase
 
 
@@ -8,7 +11,9 @@
     <CascadingAuthenticationState>
         <div class="page">
             <div class="sidebar">
-                <NavMenu/>
+                <CascadingValue Value="@ChatSessionTopics">
+                    <NavMenu/>
+                </CascadingValue>
             </div>
             <main>
                 <div class="top-row px-4 d-flex justify-content-end align-items-center w-100">
@@ -16,7 +21,11 @@
                         <a class="mx-3" href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
                         <AuthorizeView>
                             <Authorized>
-                                <p class="mx-3 mb-0">Hello, @context.User.Identity.Name!</p>
+                                @UserVerified.ToString()
+                                <p class="mx-3 mb-0">
+                                    Hello, @context.User.Identity.Name!
+                                    <span class="badge bg-secondary">@(UserVerified ? "Verified" : "Not verified")</span>
+                                </p>
                             </Authorized>
                             <NotAuthorized>
                                 <button class="btn btn-primary mx-3" href="MicrosoftIdentity/Account/SignIn">Login</button>
@@ -34,6 +43,32 @@
 </ErrorBoundary>
 
 @code {
+
+    public bool UserVerified { get; set; }
+    public (Guid Id, string Topic, DateTime Created)[] ChatSessionTopics { get; set; }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await base.OnInitializedAsync();
+        UserVerified = false;
+
+        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var userName = authState.User.Identity?.Name;
+        if (userName != null)
+        {
+            var user = UserRepository.GetUser(userName);
+            if (user != null)
+            {
+                UserVerified = true;
+
+                ChatSessionTopics = ChatSessionRepository.GetUserChatSessionTopics(user.Id);
+            }
+        }
+    }
+
+
+
 
 }
 

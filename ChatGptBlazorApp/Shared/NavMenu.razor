@@ -9,21 +9,45 @@
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
     <nav class="flex-column">
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="chat">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Chat
-            </NavLink>
+            <NavLink class="nav-link" href="@GetChatSessionLink(null)">New topic</NavLink>
         </div>
+        @foreach (var sessionTopicTuple in ChatSessionTopics)
+        {
+            <div class="nav-item px-3">
+                <NavLink class="nav-link" href="@GetChatSessionLink(sessionTopicTuple.Id)">
+                    <span class="oi oi-list-rich" aria-hidden="true">@GetSessionDescription(sessionTopicTuple)</span>
+                </NavLink>
+            </div>
+        }
     </nav>
 </div>
 
 @code {
+
+    [CascadingParameter]
+    public (Guid Id, string Topic, DateTime Created)[] ChatSessionTopics { get; set; } = Array.Empty<(Guid Id, string Topic, DateTime Created)>();
+
     private bool collapseNavMenu = true;
+
 
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
+    }
+
+    private string GetChatSessionLink(Guid? sessionId)
+    {
+        if (sessionId == null)
+            return $"chat/{Guid.NewGuid()}";
+
+        return $"chat/{sessionId}";
+    }
+
+    private object GetSessionDescription((Guid Id, string Topic, DateTime Created) sessionTopicTuple)
+    {
+        return $"{sessionTopicTuple.Topic}";
     }
 
 }
