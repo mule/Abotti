@@ -1,4 +1,5 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
+﻿@using System.Globalization
+<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">ChatGptBlazorApp</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
@@ -15,7 +16,7 @@
         {
             <div class="nav-item px-3">
                 <NavLink class="nav-link" href="@GetChatSessionLink(sessionTopicTuple.Id)">
-                    <span class="oi oi-list-rich" aria-hidden="true">@GetSessionDescription(sessionTopicTuple)</span>
+                    <span class="" aria-hidden="true">@GetSessionDescription(sessionTopicTuple)</span>
                 </NavLink>
             </div>
         }
@@ -47,7 +48,7 @@
 
     private object GetSessionDescription((Guid Id, string Topic, DateTime Created) sessionTopicTuple)
     {
-        return $"{sessionTopicTuple.Topic}";
+        return $"{sessionTopicTuple.Topic} {sessionTopicTuple.Created.ToString("yy-MM-dd", CultureInfo.CurrentCulture)}";
     }
 
 }
