@@ -1,20 +1,30 @@
 # Dotnet SDK for OpenAI ChatGPT, Whisper, GPT-4 and DALL·E
 
-[![Betalgo.OpenAI.GPT3](https://img.shields.io/nuget/v/Betalgo.OpenAI.GPT3?style=for-the-badge)](https://www.nuget.org/packages/Betalgo.OpenAI.GPT3/)
+[![Betalgo.OpenAI](https://img.shields.io/nuget/v/Betalgo.OpenAI?style=for-the-badge)](https://www.nuget.org/packages/Betalgo.OpenAI/)
 
 ```
-Install-Package Betalgo.OpenAI.GPT3
+Install-Package Betalgo.OpenAI
 ```
 
 Dotnet SDK for OpenAI Chat GPT, Whisper, GPT-4 ,GPT-3 and DALL·E  
 *Unofficial*.  
 *OpenAI doesn't have any official .Net SDK.*
+
+#### This library used to known as `Betalgo.OpenAI.GPT3`, now it has a new package Id `Betalgo.OpenAI`.
+
 ## Checkout the wiki page: 
 https://github.com/betalgo/openai/wiki
+## Checkout new ***experimantal*** utilities library:
+[![Betalgo.OpenAI.Utilities](https://img.shields.io/nuget/v/Betalgo.OpenAI.Utilities?style=for-the-badge)](https://www.nuget.org/packages/Betalgo.OpenAI.Utilities/)
 
+```
+Install-Package Betalgo.OpenAI.Utilities
+```
 ## Features
+- [ ] Plugins (coming soon)
 - [x] [Chat GPT](https://github.com/betalgo/openai/wiki/Chat-GPT)
-- [x] Azure OpenAI Support
+- [x] [Chat GPT-4](https://github.com/betalgo/openai/wiki/Chat-GPT) *(models are supported, Image analyze API not released yet by OpenAI)*
+- [x] [Azure OpenAI](https://github.com/betalgo/openai/wiki/Azure-OpenAI)
 - [x] [Image DALL·E](https://github.com/betalgo/openai/wiki/Dall-E)
 - [x] [Models](https://github.com/betalgo/openai/wiki/Models)
 - [x] [Completions](https://github.com/betalgo/openai/wiki/Completions) 
@@ -23,23 +33,22 @@ https://github.com/betalgo/openai/wiki
 - [x] [Files](https://github.com/betalgo/openai/wiki/Files) 
 - [x] [Fine-tunes](https://github.com/betalgo/openai/wiki/Fine-Tuning) 
 - [x] [Moderation](https://github.com/betalgo/openai/wiki/Moderation)
-- [x] Tokenizer Support
-- [x] Whisper
-- [ ] Rate limit support
-- [ ] Chat GPT-4 support (models are supported, Image analyze API not released yet by OpenAI)
+- [x] [Tokenizer-GPT3](https://github.com/betalgo/openai/wiki/Tokenizer)
+- [ ] [Tokenizer](https://github.com/betalgo/openai/wiki/Tokenizer)
+- [x] [Whisper](https://github.com/betalgo/openai/wiki/Whisper)
+- [x] [Rate limit](https://github.com/betalgo/openai/wiki/Rate-Limit)
+- [x] [Proxy](https://github.com/betalgo/openai/wiki/Proxy)
 
 For changelogs please go to end of the document.
 
-Visit https://openai.com/ to get your API key. Also documentation with more detail is avaliable there.  
+
 
 ## Sample Usages
-The repository contains a sample project named **OpenAI.Playground** that you can refer to for a better understanding of how the library works. However, please exercise caution while experimenting with it, as some of the test methods may result in unintended consequences such as file deletion or fine tuning.
-
+The repository contains a sample project named **OpenAI.Playground** that you can refer to for a better understanding of how the library works. However, please exercise caution while experimenting with it, as some of the test methods may result in unintended consequences such as file deletion or fine tuning.  
 
 *!! It is highly recommended that you use a separate account instead of your primary account while using the playground. This is because some test methods may add or delete your files and models, which could potentially cause unwanted issues. !!*
 
-Your API Key comes from here --> https://platform.openai.com/account/api-keys
-
+Your API Key comes from here --> https://platform.openai.com/account/api-keys   
 Your Organization ID comes from here --> https://platform.openai.com/account/org-settings
 
 ### Without using dependency injection:
@@ -178,6 +187,34 @@ I will always be using the latest libraries, and future releases will frequently
 I am incredibly busy. If I forgot your name, please accept my apologies and let me know so I can add it to the list.
 
 ## Changelog
+### 7.0.0
+- The code now supports .NET 7.0. Big cheers to @BroMarduk for making this happen.
+- The library now automatically disposes of the Httpclient when it's created by the constructor. This feature is thanks to @BroMarduk.
+- New support has been added for using more than one instance at the same time. Check out this [link](https://github.com/betalgo/openai/wiki/Working-with-Multiple-Instances) for more details. Thanks to @remixtedi for bringing this to my attention.
+- A lot of small improvements have been done by @BroMarduk.
+- **Breaking Changes** 😢
+  - I've removed 'GPT3' from the namespace, so you might need to modify some aspects of your project. But don't worry, it's pretty simple! For instance, instead of writing `using OpenAI.GPT3.Interfaces`, you'll now write `using OpenAI.Interfaces`.
+  - The order of the OpenAI constructor parameters has changed. It now takes 'options' first, then 'httpclient'.
+    ```csharp
+	//Before
+	var openAiService = new OpenAIService(httpClient, options);
+	//Now
+	var openAiService = new OpenAIService(options, httpClient);
+	```
+### 6.8.6
+- Updated Azure OpenAI default API version to the preview version to support ChatGPT. thanks to all [issue reporters](https://github.com/betalgo/openai/issues/181)
+- Added support for an optional chat `name` field. thanks to @shanepowell
+- Breaking Change
+   - `FineTuneCreateRequest.PromptLossWeight` converto to float thanks to @JohnJ0808
+### 6.8.5
+- Mostly bug fixes
+- Fixed Moderation functions. https://github.com/betalgo/openai/issues/214 thanks to @scolmarg @AbdelAzizMohamedMousa @digitalvir
+- Added File Stream support for Whisper, Thanks to @Swimburger 
+- Fixed Whisper default response type, Thanks to @Swimburger 
+- Performance improvements and code clean up,again Thanks to @Swimburger 👏
+- Code clenaup, Thanks to @WeihanLi
+### 6.8.4
+- Released update message about nuget Package ID change
 ### 6.8.3
 - **Breaking Changes**: 
     - ~~I am going to update library namespace from `Betalgo.OpenAI.GPT3` to `OpenAI.GPT3`. This is the first time I am trying to update my nuget packageId. If something broken, please be patient. I will be fixing it soon.~~
@@ -201,14 +238,3 @@ ServiceCollection.AddOpenAIService()
     - **Breaking Changes**: Removed overridden methods that were basically string conversions. 
     I think these methods were not used much and it is fairly easy to do these conversions outside of the method. 
     If you disagree, let me know and I can consider adding them back.
-### 6.8.0
-* Added .Net Standart Support, Massive thanks to @pdcruze and @ricaun
-
-### 6.7.3
-* **Breaking change**: `ChatMessage.FromAssistance` is now `ChatMessage.FromAssistant`. Thanks to @Swimburger 
-* The Tokenizer method has been extended with `cleanUpCREOL`. You can use this option to clean up Windows-style line endings. Thanks to @gspentzas1991 
-
-### 6.7.2
-* Removed Microsoft.AspNet.WebApi.Client dependecy
-* The action build device has been updated to ubuntu due to suspicions that the EOL of the vocab.bpe file had been altered in the last few Windows builds.
-* Added support for TextEmbeddingAdaV2 Model.
