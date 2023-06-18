@@ -1,26 +1,39 @@
-﻿using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using OpenAI.GPT3.Interfaces;
-using OpenAI.GPT3.Managers;
+﻿using Microsoft.Extensions.DependencyInjection;
+using OpenAI.Interfaces;
+using OpenAI.Managers;
 
-namespace OpenAI.GPT3.Extensions;
+namespace OpenAI.Extensions;
 
 public static class OpenAIServiceCollectionExtensions
 {
     public static IHttpClientBuilder AddOpenAIService(this IServiceCollection services, Action<OpenAiOptions>? setupAction = null)
     {
-        if (setupAction == null)
+        var optionsBuilder = services.AddOptions<OpenAiOptions>();
+        if (setupAction != null)
         {
-            services.AddOptions<OpenAiOptions>();
+            optionsBuilder.Configure(setupAction);
         }
         else
         {
-            services.AddOptions<OpenAiOptions>().Configure(setupAction);
+            optionsBuilder.BindConfiguration(OpenAiOptions.SettingKey);
         }
 
-        var configuration = services.BuildServiceProvider().GetRequiredService<IConfiguration>();
-        services.Configure<OpenAiOptions>(configuration.GetSection(OpenAiOptions.SettingKey));
-
         return services.AddHttpClient<IOpenAIService, OpenAIService>();
+    }
+    
+    public static IHttpClientBuilder AddOpenAIService<TServiceInterface>(this IServiceCollection services, string name, Action<OpenAiOptions>? setupAction = null)
+        where TServiceInterface : class, IOpenAIService
+    {
+        var optionsBuilder = services.AddOptions<OpenAiOptions>(name);
+        if (setupAction != null)
+        {
+            optionsBuilder.Configure(setupAction);
+        }
+        else
+        {
+            optionsBuilder.BindConfiguration($"{OpenAiOptions.SettingKey}:{name}");
+        }
+
+        return services.AddHttpClient<TServiceInterface>();
     }
 }
