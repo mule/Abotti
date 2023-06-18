@@ -1,6 +1,5 @@
 @page "/Chat"
 @page "/Chat/{PromptId:guid}"
-@using ChatGptBlazorApp.AiServices
 @using Blazored.Toast.Services
 @inject OpenAiClient OpenAiClient
 @inject IToastService ToastService
@@ -11,7 +10,13 @@
 </div>
 <form onsubmit="@Send">
     <div class="row">
-        <textarea class="form-control"  id="chatInput" @bind="currentPrompt"></textarea>
+        <div class="mb-3">
+            <label for="chatTopic" class="form-label">Topic</label>
+            <input type="text" class="form-control" id="chatTopic" @bind="_chatTopic">
+        </div>
+    </div>
+    <div class="row">
+        <textarea class="form-control"  id="chatInput" @bind="_currentPrompt"></textarea>
     </div>
     <div class="row">
         <div class="col-md-1">
@@ -21,7 +26,7 @@
 </form>
 
 
-@if (waitingForResponse)
+@if (_waitingForResponse)
 {
     <div class="row m-1">Waiting for response....</div>
 }
@@ -40,15 +45,17 @@
     [Parameter]
     public Guid? PromptId { get; set; }
 
-    bool waitingForResponse;
-    string currentPrompt = "";
+    bool _waitingForResponse;
+    string _currentPrompt = "";
+    string _chatTopic = "";
+
     readonly List<string> replies = new();
 
     private async Task Send()
     {
-        waitingForResponse = true;
-        replies.Add($"User: {currentPrompt}");
-        var result = await OpenAiClient.GetCompletion(currentPrompt);
+        _waitingForResponse = true;
+        replies.Add($"User: {_currentPrompt}");
+        var result = await OpenAiClient.GetCompletion(_currentPrompt);
 
         if (result.Success)
             replies.Add(result.Response);
@@ -56,8 +63,8 @@
         {
             ToastService.ShowError(result.Errors.First());
         }
-        currentPrompt = string.Empty;
-        waitingForResponse = false;
+        _currentPrompt = string.Empty;
+        _waitingForResponse = false;
     }
 
 }

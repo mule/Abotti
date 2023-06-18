@@ -1,5 +1,4 @@
 using Blazored.Toast;
-using ChatGptBlazorApp.AiServices;
 using ChatGptBlazorApp.Areas.Identity.Data;
 using ChatGptBlazorCore.Models;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
@@ -9,6 +8,7 @@ using Microsoft.Identity.Web.UI;
 using OpenAI.GPT3.Extensions;
 using Serilog;
 using Serilog.Sinks.SpectreConsole;
+using ServiceAccessLayer.AiServices;
 
 // Configure Serilog logger
 Log.Logger = new LoggerConfiguration()
