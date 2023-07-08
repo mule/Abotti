@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
-using OpenAI.GPT3.Extensions;
+using OpenAI.Extensions;
 using Serilog;
 using Serilog.Sinks.SpectreConsole;
 using ServiceAccessLayer.AiServices;
