@@ -9,7 +9,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\ChatGptBlazorCore\ChatGptBlazorCore.csproj"/>
-        <ProjectReference Include="..\openaiSDK\OpenAI.SDK\OpenAI.GPT3.csproj"/>
         <ProjectReference Include="..\ServiceAccessLayer\ServiceAccessLayer.csproj"/>
     </ItemGroup>
 

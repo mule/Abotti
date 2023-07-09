@@ -1,3 +1,4 @@
+using System.Text;
 using Microsoft.Extensions.Logging;
 using OpenAI.Interfaces;
 using OpenAI.ObjectModels.RequestModels;
@@ -6,12 +7,42 @@ namespace ServiceAccessLayer.AiServices;
 
 public class OpenAiClient : IOpenAiClient
 {
+    private readonly ChatMessage[] _chatContinueDefaultAppendedMessages =
+    {
+        ChatMessage.FromSystem("The user has sent you the following new message:")
+    };
+
+    private readonly ChatMessage[] _chatContinueDefaultPrependedMessages =
+    {
+        ChatMessage.FromSystem(
+            "You are a helpful assistant and you have been having the following conversation with a user:")
+    };
+
+    private readonly ChatMessage[] _chatStartDefaultPrependedMessages =
+    {
+        ChatMessage.FromSystem(
+            "You are a helpful assistant and the user has initiated a conversation with you with the following message:")
+    };
+
+    private readonly ChatMessage[] _classificationDefaultAppendedMessages =
+    {
+        ChatMessage.FromSystem("Give your answer in this form {main topic};{sub topic};{sub topic}"),
+        ChatMessage.FromSystem(
+            "It is very important to you limit each response to maximum of 3 words and maximum of 3 topics")
+    };
+
+    private readonly ChatMessage[] _classificationDefaultPrependedMessages =
+    {
+        ChatMessage.FromSystem("You are a language model that helps classify discussions."),
+        ChatMessage.FromSystem("The user has sent you the following message:")
+    };
+
     private readonly string _llmModel;
     private readonly ILogger<OpenAiClient> _logger;
-
     private readonly IOpenAIService _openAiService;
 
-    public OpenAiClient(IOpenAIService openAiService, ILogger<OpenAiClient> logger, string llmModel)
+
+    public OpenAiClient(IOpenAIService openAiService, ILogger<OpenAiClient> logger, string llmModel = "gpt-3.5-turbo")
     {
         _openAiService = openAiService;
         _logger = logger;
@@ -32,20 +63,15 @@ public class OpenAiClient : IOpenAiClient
 
         if (previousMessages.Any())
         {
-            messages.Add(new ChatMessage("system",
-                "You are a helpful assistant and you have been having the following conversation with a user:"));
+            messages.AddRange(_chatContinueDefaultPrependedMessages);
             messages.AddRange(previousMessages.Select(m => new ChatMessage(m.Role, m.Message)));
-            messages.Add(new ChatMessage("system", "The user has sent you the following message:"));
-            messages.Add(new ChatMessage("user", prompt));
+            messages.AddRange(_chatContinueDefaultAppendedMessages);
+            messages.Add(ChatMessage.FromUser(prompt));
         }
         else
         {
-            messages = new List<ChatMessage>
-            {
-                new("system",
-                    "You are a helpful assistant and the user has initiated a conversation with you with the following message:"),
-                new("user", prompt)
-            };
+            messages.AddRange(_chatStartDefaultPrependedMessages);
+            messages.Add(ChatMessage.FromUser(prompt));
         }
 
         var request = new ChatCompletionCreateRequest
@@ -71,11 +97,25 @@ public class OpenAiClient : IOpenAiClient
 
     // Try to get chet session topic from openAI by giving it prompts and responses
     public async Task<(bool Success, string Response, string[] Errors)> GetChatTopic(
-        (string Role, string Message)[] messages)
+        (string Role, string Message)[] chatMessages)
     {
+        var messages = new List<ChatMessage>();
+        messages.AddRange(_classificationDefaultPrependedMessages);
+        //messages.AddRange(chatMessages.Select(m => new ChatMessage(m.Role, m.Message)));
+
+        var stringBuilder = new StringBuilder();
+        stringBuilder.Append("[");
+        foreach (var chatMessage in chatMessages)
+            stringBuilder.Append($"{{\"role\": \"{chatMessage.Role}\", \"content\": \"{chatMessage.Message}\"}},");
+        stringBuilder.Append("]");
+
+        var conversation = stringBuilder.ToString();
+        messages.Add(ChatMessage.FromUser(conversation));
+        messages.AddRange(_classificationDefaultAppendedMessages);
+
         var request = new ChatCompletionCreateRequest
         {
-            Messages = messages.Select(x => new ChatMessage(x.Role, x.Message)).ToList(),
+            Messages = messages,
             Model = _llmModel
         };
         var completion = await _openAiService.ChatCompletion.CreateCompletion(request);

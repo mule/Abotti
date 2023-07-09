@@ -60,6 +60,7 @@ try
         await AnsiConsole.Status().StartAsync("Development console: Waiting for response...", async context =>
         {
             var response = await openAiClient.GetCompletion(sessionMessages, prompt);
+            var chatTopic = await openAiClient.GetChatTopic(sessionMessages.ToArray());
             context.Status("Development console: Response received");
             context.Refresh();
 
@@ -68,12 +69,12 @@ try
                 sessionMessages.Add(("assistant", response.Response));
                 try
                 {
-                    AnsiConsole.MarkupLine($"OpenAI: {response.Response}");
+                    AnsiConsole.MarkupLine($"OpenAI ({chatTopic.Response}): {response.Response}");
                 }
                 catch (Exception e)
                 {
                     Log.Logger.Error(e, "Unable to write response as markup");
-                    AnsiConsole.WriteLine($"OpenAI: {response.Response}");
+                    AnsiConsole.WriteLine($"OpenAI ({chatTopic.Response}): {response.Response}");
                 }
             }
             else
@@ -82,8 +83,8 @@ try
             }
         });
 
-
         prompt = AnsiConsole.Ask<string>("\nYou: ");
+        sessionMessages.Add(("user", prompt));
     }
 
     AnsiConsole.WriteLine("Goodbye!");
