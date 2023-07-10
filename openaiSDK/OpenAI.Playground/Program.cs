@@ -1,11 +1,11 @@
-﻿#if NET6_0_OR_GREATER
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using OpenAI.Extensions;
+using OpenAI.Interfaces;
+using OpenAI.Playground.TestHelpers;
+#if NET6_0_OR_GREATER
 using LaserCatEyes.HttpClientListener;
 #endif
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.DependencyInjection;
-using OpenAI.GPT3.Extensions;
-using OpenAI.GPT3.Interfaces;
-using OpenAI.Playground.TestHelpers;
 
 var builder = new ConfigurationBuilder()
     .AddJsonFile("ApiSettings.json")
@@ -41,12 +41,14 @@ var sdk = serviceProvider.GetRequiredService<IOpenAIService>();
 //  |   /|\    |     /\   ___\o   \o    |    o/    o/__   /\     |    /|\   |
 //  |   / \   / \   | \  /)  |    ( \  /o\  / )    |  (\  / |   / \   / \   |
 //  |-----------------------------------------------------------------------|
+
 await ChatCompletionTestHelper.RunSimpleChatCompletionTest(sdk);
 await ChatCompletionTestHelper.RunSimpleCompletionStreamTest(sdk);
+await ChatCompletionTestHelper.RunChatFunctionCallTest(sdk);
 
 // Whisper
-await AudioTestHelper.RunSimpleAudioCreateTranscriptionTest(sdk);
-await AudioTestHelper.RunSimpleAudioCreateTranslationTest(sdk);
+//await AudioTestHelper.RunSimpleAudioCreateTranscriptionTest(sdk);
+//await AudioTestHelper.RunSimpleAudioCreateTranslationTest(sdk);
 
 //await ModelTestHelper.FetchModelsTest(sdk);
 //await EditTestHelper.RunSimpleEditCreateTest(sdk);

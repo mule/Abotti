@@ -1,4 +1,4 @@
-﻿namespace OpenAI.GPT3;
+﻿namespace OpenAI;
 
 /// <summary>
 ///     Provider Type
@@ -20,7 +20,7 @@ public class OpenAiOptions
 {
     private const string OpenAiDefaultApiVersion = "v1";
     private const string OpenAiDefaultBaseDomain = "https://api.openai.com/";
-    private const string AzureOpenAiDefaultApiVersion = "2022-12-01";
+    private const string AzureOpenAiDefaultApiVersion = "2023-03-15-preview";
 
 
     /// <summary>
@@ -113,7 +113,8 @@ public class OpenAiOptions
         set => DefaultModelId = value;
     }
 
-    public bool ValidateApiOptions { get; set; } =true;
+    public bool ValidateApiOptions { get; set; } = true;
+
     /// <summary>
     ///     Default model id. If you are working with only one model, this will save you from few line extra code.
     /// </summary>

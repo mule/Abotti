@@ -1,63 +1,201 @@
+@page "/"
 @page "/Chat"
-@page "/Chat/{PromptId:guid}"
-@using ChatGptBlazorApp.AiServices
+@page "/Chat/{SessionId:guid}"
+@using ChatGptBlazorCore.Models
+@using ServiceAccessLayer.AiServices
 @using Blazored.Toast.Services
+@using System.Globalization
 @inject OpenAiClient OpenAiClient
 @inject IToastService ToastService
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IUserRepository UserRepository
+@inject IChatSessionRepository ChatSessionRepository
+
 
 <h3>Chat</h3>
 <div>
-    @PromptId.ToString()
+    @SessionId.ToString()
 </div>
-<form onsubmit="@Send">
-    <div class="row">
-        <textarea class="form-control"  id="chatInput" @bind="currentPrompt"></textarea>
-    </div>
-    <div class="row">
-        <div class="col-md-1">
-            <button type="submit" class="form-control mt-2 btn btn-primary">Send</button>
+
+<div class="row">
+    <div class="col-md-3">
+        <div class="sidebar">
+            <div class="nav-scrollable">
+                <div class="nav-item">
+                    <button class="btn btn-primary">New chat</button>
+                </div>
+                @foreach (var sessionTopicTuple in _sessionTopics)
+                {
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="@GetChatSessionLink(sessionTopicTuple.Id)">
+                            <span class="" aria-hidden="true">@GetSessionDescription(sessionTopicTuple)</span>
+                        </NavLink>
+                    </div>
+                }
+
+            </div>
+
         </div>
     </div>
-</form>
-
-
-@if (waitingForResponse)
-{
-    <div class="row m-1">Waiting for response....</div>
-}
-<div class="row" id="chatOutput">
-    <ul>
-        @foreach (var reply in replies)
+    <div class="col-md-9">
+        <form onsubmit="@Send">
+            <div class="mb-3">
+                <label for="chatTopic" class="form-label">Topic</label>
+                <input type="text" class="form-control" id="chatTopic" @bind="_currentSession.Topic">
+            </div>
+            <div class="row">
+                <textarea class="form-control"  id="chatInput" @bind="_currentPrompt"></textarea>
+            </div>
+            <div class="row">
+                <div class="col-md-2">
+                    <button type="submit" class="form-control mt-2 btn btn-primary">Send</button>
+                </div>
+            </div>
+        </form>
+        @if (_waitingForResponse)
         {
-            <li>@reply</li>
+            <div class="row m-1">Waiting for response....</div>
         }
-    </ul>
+        <div class="row" id="chatOutput">
+            <ul>
+                @foreach (var reply in _currentSession.Entries)
+                {
+                    <li>@reply.Role: @reply.Content</li>
+                }
+            </ul>
+        </div>
+    </div>
 </div>
 
 
 @code {
 
     [Parameter]
-    public Guid? PromptId { get; set; }
+    public Guid? SessionId { get; set; }
 
-    bool waitingForResponse;
-    string currentPrompt = "";
-    readonly List<string> replies = new();
+    bool _waitingForResponse;
+    string _currentPrompt = "";
+    ChatSession _currentSession;
+    //chat session topics
+    (Guid Id, string Topic, DateTime Created)[] _sessionTopics = Array.Empty<(Guid Id, string Topic, DateTime Created)>();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var principal = authState.Result.User;
+
+
+        var user = await
+            UserRepository.GetUserAsync(principal.Identity.Name);
+
+        var sessionTopics = await ChatSessionRepository.GetUserChatSessionTopicsAsync(user.Id);
+        _sessionTopics = sessionTopics.OrderByDescending(topic => topic.Created).ToArray();
+
+        if (SessionId.HasValue)
+        {
+            var session = await ChatSessionRepository.GetChatSessionAsync(SessionId.Value, user.Id);
+            if (session != null)
+            {
+                _currentSession = session;
+            }
+        }
+        else
+        {
+            _currentSession = new ChatSession(user.Id)
+            {
+                Entries = new List<ChatEntry>(),
+                Topic = "New topic"
+            };
+
+
+            NavigationManager.NavigateTo($"/Chat/{_currentSession.Id}");
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var authState = AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var principal = authState.Result.User;
+
+
+        var user = await
+            UserRepository.GetUserAsync(principal.Identity.Name);
+        if (SessionId.HasValue)
+        {
+            var session = await ChatSessionRepository.GetChatSessionAsync(SessionId.Value, user.Id);
+            if (session != null)
+            {
+                _currentSession = session;
+            }
+            else
+            {
+                _currentSession = new ChatSession(user.Id)
+                {
+                    Entries = new List<ChatEntry>(),
+                    Topic = "New topic"
+                };
+                ChatSessionRepository.AddChatSessionAsync(_currentSession);
+
+                NavigationManager.NavigateTo($"/Chat/{_currentSession.Id}");
+            }
+        }
+
+        await base.OnParametersSetAsync();
+    }
 
     private async Task Send()
     {
-        waitingForResponse = true;
-        replies.Add($"User: {currentPrompt}");
-        var result = await OpenAiClient.GetCompletion(currentPrompt);
+        _waitingForResponse = true;
+
+        var replies = _currentSession.Entries.Select(e => (e.Role, e.Content)).ToList();
+        var result = await OpenAiClient.GetCompletion(replies, _currentPrompt);
 
         if (result.Success)
-            replies.Add(result.Response);
+        {
+            _currentSession.Entries.Add(new ChatEntry { Role = "user", Content = _currentPrompt });
+            _currentSession.Entries.Add(new ChatEntry { Role = "assistant", Content = result.Response });
+        }
         else
         {
             ToastService.ShowError(result.Errors.First());
         }
-        currentPrompt = string.Empty;
-        waitingForResponse = false;
+        replies = _currentSession.Entries.Select(e => (e.Role, e.Content)).ToList();
+        var topicResponse = await OpenAiClient.GetChatTopic(replies.ToArray());
+        if (topicResponse.Success)
+        {
+            _currentSession.Topic = topicResponse.Response;
+            var updateResult = await ChatSessionRepository.UpdateChatSessionAsync(_currentSession);
+            if (!updateResult.Ok)
+            {
+                ToastService.ShowError(updateResult.Errors.First());
+            }
+
+            var updatedTopics = await ChatSessionRepository.GetUserChatSessionTopicsAsync(_currentSession.UserId);
+            _sessionTopics = updatedTopics.OrderByDescending(topic => topic.Created).ToArray();
+        }
+        else
+        {
+            ToastService.ShowError(topicResponse.Errors.First());
+        }
+        _currentPrompt = string.Empty;
+        _waitingForResponse = false;
     }
+
+    private string GetChatSessionLink(Guid? sessionId)
+    {
+        if (sessionId == null)
+            return $"chat/{Guid.NewGuid()}";
+
+        return $"chat/{sessionId}";
+    }
+
+    private object GetSessionDescription((Guid Id, string Topic, DateTime Created) sessionTopicTuple)
+    {
+        return $"{sessionTopicTuple.Topic} {sessionTopicTuple.Created.ToString("yy-MM-dd", CultureInfo.CurrentCulture)}";
+    }
+
+
 
 }

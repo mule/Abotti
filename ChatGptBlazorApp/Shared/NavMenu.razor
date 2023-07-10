@@ -1,4 +1,7 @@
-﻿@using System.Globalization
+﻿@using ChatGptBlazorCore.Models
+@using System.Globalization
+@inject IChatSessionRepository ChatSessionRepository
+
 <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">ChatGptBlazorApp</a>
@@ -10,7 +13,8 @@
 <div class="@NavMenuCssClass nav-scrollable" @onclick="ToggleNavMenu">
     <nav class="flex-column">
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="@GetChatSessionLink(null)">New topic</NavLink>
+            @* <NavLink class="nav-link" href="@GetChatSessionLink(null)">New topic</NavLink> *@
+            <button @onclick="AddNewTopic">New topic</button>
         </div>
         @foreach (var sessionTopicTuple in ChatSessionTopics)
         {
@@ -24,6 +28,12 @@
 </div>
 
 @code {
+
+    public delegate Task NewTopicDelegate();
+
+    [Parameter]
+    public EventCallback OnNewTopic { get; set; }
+
 
     [CascadingParameter]
     public (Guid Id, string Topic, DateTime Created)[] ChatSessionTopics { get; set; } = Array.Empty<(Guid Id, string Topic, DateTime Created)>();
@@ -49,6 +59,11 @@
     private object GetSessionDescription((Guid Id, string Topic, DateTime Created) sessionTopicTuple)
     {
         return $"{sessionTopicTuple.Topic} {sessionTopicTuple.Created.ToString("yy-MM-dd", CultureInfo.CurrentCulture)}";
+    }
+
+    private async Task AddNewTopic(MouseEventArgs obj)
+    {
+        await OnNewTopic.InvokeAsync();
     }
 
 }

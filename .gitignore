@@ -1,1 +1,103 @@
-/ChatGptBlazorCore/bin/
+# Rider and .NET specific
+.idea/
+*.sln.iml
+*.csproj.user
+*.resharper.user
+*.DotSettings.user
+*.suo
+*. suo. user
+_ReSharper. *
+_ReSharper. **/*
+*.dotCover
+*.dotTrace
+*.dotMemory
+*.tmp
+*.tlog/
+_ReSharper*
+*.swp
+*.[Cc]ache
+*.bak
+*.bak2
+*.bak3
+*.bak4
+*.bak5
+*.bak6
+*.bak7
+*.bak8
+*.bak9
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa][Rr][Mm]/
+[Aa][Rr][Mm]64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+msbuild.log
+msbuild.err
+msbuild.wrn
+
+# Visual Studio files
+.vs/
+*.user
+*.suo
+*.cache
+*.sln.docstates
+*.pdb
+
+# Test files
+*.testsettings
+*.loadtest
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.pyc
+*.pyo
+*.vssscc
+*.vspscc
+
+# NuGet packages
+packages/
+*.nupkg
+*.pdb
+*.dll
+*.exe
+*.xml
+*.config
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.bmp
+*.ico
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+*.7z
+*.dmg
+*.iso
+*.bin
+*.exe
+*.dll
+*.pdb
+*.class
+
+# Npm packages
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# User-specific files
+*.userprefs
+*.usertasks
+*.userrules

@@ -1,19 +1,19 @@
 using Blazored.Toast;
-using ChatGptBlazorApp.AiServices;
 using ChatGptBlazorApp.Areas.Identity.Data;
 using ChatGptBlazorCore.Models;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
-using OpenAI.GPT3.Extensions;
+using OpenAI.Extensions;
 using Serilog;
-using Serilog.Sinks.SpectreConsole;
+using ServiceAccessLayer.AiServices;
 
 // Configure Serilog logger
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
-    .WriteTo.SpectreConsole("{Timestamp:HH:mm:ss} [{Level:u4}] {Message:lj}{NewLine}{Exception}")
+    //.WriteTo.SpectreConsole("{Timestamp:HH:mm:ss} [{Level:u4}] {Message:lj}{NewLine}{Exception}")
+    .WriteTo.Console()
     .WriteTo.File("logs/log.txt", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 

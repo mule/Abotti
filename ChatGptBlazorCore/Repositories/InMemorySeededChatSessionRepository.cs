@@ -14,9 +14,31 @@ public class InMemorySeededChatSessionRepository : IChatSessionRepository
         _chatSessions = chatSessions;
     }
 
+    public bool HasChatSessions(Guid userId)
+    {
+        return _chatSessions.Values.Any(x => x.UserId == userId);
+    }
+
+    public async Task<bool> HasChatSessionsAsync(Guid userId)
+    {
+        return await Task.FromResult(_chatSessions.Values.Any(x => x.UserId == userId));
+    }
+
+    public async Task<ChatSession[]> GetChatSessionsAsync(Guid userId)
+    {
+        return await Task.FromResult(_chatSessions.Values.Where(x => x.UserId == userId).ToArray());
+    }
+
     public ChatSession[] GetChatSessions(Guid userId)
     {
         return _chatSessions.Values.Where(x => x.UserId == userId).ToArray();
+    }
+
+
+    public async Task<(Guid Id, string Topic, DateTime Created)[]> GetUserChatSessionTopicsAsync(Guid userId)
+    {
+        return await Task.FromResult(_chatSessions.Values.Where(x => x.UserId == userId)
+            .Select(x => (x.Id, x.Topic, x.Created)).ToArray());
     }
 
     public (Guid Id, string Topic, DateTime Created)[] GetUserChatSessionTopics(Guid userId)
@@ -24,21 +46,24 @@ public class InMemorySeededChatSessionRepository : IChatSessionRepository
         return _chatSessions.Values.Where(x => x.UserId == userId).Select(x => (x.Id, x.Topic, x.Created)).ToArray();
     }
 
-    public ChatSession? GetChatSession(Guid chatSessionId)
+
+    public async Task<ChatSession?> GetChatSessionAsync(Guid chatSessionId, Guid userId)
     {
-        return _chatSessions.TryGetValue(chatSessionId, out var chatSession) ? chatSession : null;
+        return await Task.FromResult(GetChatSession(chatSessionId, userId));
     }
 
-    public ChatSession? AddChatSession(Guid userId, string rootPrompt)
+    public ChatSession? GetChatSession(Guid chatSessionId, Guid userId)
     {
-        var chatSession = new ChatSession
-        {
-            Id = Guid.NewGuid(),
-            UserId = userId,
-            RootPrompt = rootPrompt
-        };
-        _chatSessions.Add(chatSession.Id, chatSession);
-        return chatSession;
+        return _chatSessions.TryGetValue(chatSessionId, out var chatSession) && chatSession.UserId == userId
+            ? chatSession
+            : null;
+    }
+
+
+    public async Task<(bool Ok, string[] Errors)> AddChatSessionAsync(ChatSession chatSession)
+    {
+        var result = await Task.FromResult(AddChatSession(chatSession));
+        return result;
     }
 
     public (bool Ok, string[] Errors) AddChatSession(ChatSession chatSession)
@@ -47,6 +72,12 @@ public class InMemorySeededChatSessionRepository : IChatSessionRepository
             return (false, new[] { "Chat session already exists" });
         _chatSessions.Add(chatSession.Id, chatSession);
         return (true, Array.Empty<string>());
+    }
+
+    public async Task<(bool Ok, string[] Errors)> DeleteChatSessionAsync(Guid chatSessionId)
+    {
+        var result = await Task.FromResult(DeleteChatSession(chatSessionId));
+        return result;
     }
 
 
@@ -65,11 +96,22 @@ public class InMemorySeededChatSessionRepository : IChatSessionRepository
         return (true, Array.Empty<string>());
     }
 
-    public (bool Ok, ChatSession Result, string[] Errors) UpdateChatSession(Guid chatSessionId, string rootPrompt)
+    public async Task<(bool Ok, ChatSession Result, string[] Errors)> UpdateChatSessionAsync(ChatSession chatSession)
     {
-        if (!_chatSessions.TryGetValue(chatSessionId, out var chatSession))
+        var result = await Task.FromResult(UpdateChatSession(chatSession));
+        return result;
+    }
+
+    public (bool Ok, ChatSession Result, string[] Errors) UpdateChatSession(ChatSession chatSession)
+    {
+        if (!_chatSessions.ContainsKey(chatSession.Id))
             return (false, null!, new[] { "Chat session not found" });
-        chatSession.RootPrompt = rootPrompt;
+        _chatSessions[chatSession.Id] = chatSession;
         return (true, chatSession, Array.Empty<string>());
+    }
+
+    public ChatSession? GetChatSession(Guid chatSessionId)
+    {
+        return _chatSessions.TryGetValue(chatSessionId, out var chatSession) ? chatSession : null;
     }
 }
