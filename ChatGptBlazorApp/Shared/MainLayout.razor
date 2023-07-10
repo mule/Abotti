@@ -1,6 +1,7 @@
 ﻿@inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IUserRepository UserRepository
 @inject IChatSessionRepository ChatSessionRepository
+@inject NavigationManager NavigationManager
 @using ChatGptBlazorCore.Models
 @inherits LayoutComponentBase
 
@@ -10,11 +11,11 @@
 <ErrorBoundary>
     <CascadingAuthenticationState>
         <div class="page">
-            <div class="sidebar">
-                <CascadingValue Value="@ChatSessionTopics">
-                    <NavMenu/>
-                </CascadingValue>
-            </div>
+            @* <div class="sidebar"> *@
+            @*     <CascadingValue Value="@ChatSessionTopics"> *@
+            @*         <NavMenu OnNewTopic="HandleNewTopicRequest"/> *@
+            @*     </CascadingValue> *@
+            @* </div> *@
             <main>
                 <div class="top-row px-4 d-flex justify-content-end align-items-center w-100">
                     <div class="d-flex align-items-center">
@@ -45,29 +46,15 @@
 @code {
 
     public bool UserVerified { get; set; }
-    public (Guid Id, string Topic, DateTime Created)[] ChatSessionTopics { get; set; }
-
 
     protected override async Task OnInitializedAsync()
     {
-        await base.OnInitializedAsync();
-        UserVerified = false;
+        var principal = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var user = await UserRepository.GetUserAsync(principal.User.Identity.Name);
 
-        var authState = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var userName = authState.User.Identity?.Name;
-        if (userName != null)
-        {
-            var user = UserRepository.GetUser(userName);
-            if (user != null)
-            {
-                UserVerified = true;
-
-                ChatSessionTopics = ChatSessionRepository.GetUserChatSessionTopics(user.Id);
-            }
-        }
+        if (user != null)
+            UserVerified = true;
     }
-
-
 
 
 }
