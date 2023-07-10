@@ -2,6 +2,7 @@
 @page "/Chat"
 @page "/Chat/{SessionId:guid}"
 @using ChatGptBlazorCore.Models
+@using Markdig
 @using ServiceAccessLayer.AiServices
 @using Blazored.Toast.Services
 @using System.Globalization
@@ -52,6 +53,7 @@
                     <button type="submit" class="form-control mt-2 btn btn-primary">Send</button>
                 </div>
             </div>
+
         </form>
         @if (_waitingForResponse)
         {
@@ -61,7 +63,12 @@
             <ul>
                 @foreach (var reply in _currentSession.Entries)
                 {
-                    <li>@reply.Role: @reply.Content</li>
+                    var contentHtml = Markdown.ToHtml(reply.Content);
+
+                    <li>
+                        @reply.Role:
+                        <div>@((MarkupString)contentHtml)</div>
+                    </li>
                 }
             </ul>
         </div>
