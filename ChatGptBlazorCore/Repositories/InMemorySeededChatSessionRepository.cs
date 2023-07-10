@@ -59,12 +59,6 @@ public class InMemorySeededChatSessionRepository : IChatSessionRepository
             : null;
     }
 
-    public ChatSession? AddChatSession(Guid userId, IEnumerable<ChatEntry> entries = null, string topic = null,
-        List<string> tags = null)
-    {
-        throw new NotImplementedException();
-    }
-
 
     public async Task<(bool Ok, string[] Errors)> AddChatSessionAsync(ChatSession chatSession)
     {

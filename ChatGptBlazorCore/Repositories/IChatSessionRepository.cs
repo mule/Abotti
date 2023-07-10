@@ -14,10 +14,6 @@ public interface IChatSessionRepository
     Task<ChatSession?> GetChatSessionAsync(Guid chatSessionId, Guid userId);
     ChatSession? GetChatSession(Guid chatSessionId, Guid userId);
 
-
-    ChatSession? AddChatSession(Guid userId, IEnumerable<ChatEntry> entries = null, string topic = null,
-        List<string> tags = null);
-
     Task<(bool Ok, string[] Errors)> DeleteChatSessionAsync(Guid chatSessionId);
 
     Task<(bool Ok, string[] Errors)> AddChatSessionAsync(ChatSession chatSession);
