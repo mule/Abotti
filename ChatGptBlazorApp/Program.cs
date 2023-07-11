@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
 using OpenAI.Extensions;
+using OpenAI.Interfaces;
+using OpenAI.ObjectModels;
 using Serilog;
 using ServiceAccessLayer.AiServices;
 
@@ -52,7 +54,9 @@ try
     builder.Services.AddRazorPages();
     builder.Services.AddServerSideBlazor();
     builder.Services.AddOpenAIService();
-    builder.Services.AddScoped<OpenAiClient>();
+    builder.Services.AddTransient<IOpenAiClient>(provider => new OpenAiClient(
+        provider.GetService<IOpenAIService>(),
+        provider.GetService<ILogger<OpenAiClient>>(), Models.Gpt_3_5_Turbo));
     builder.Services.AddBlazoredToast();
     builder.Services.AddControllersWithViews(options =>
     {
