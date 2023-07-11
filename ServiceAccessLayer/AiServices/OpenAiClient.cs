@@ -26,20 +26,33 @@ public class OpenAiClient : IOpenAiClient
 
     private readonly ChatMessage[] _classificationDefaultAppendedMessages =
     {
-        ChatMessage.FromSystem("Give your answer in this form {main topic};{sub topic};{sub topic}"),
+        ChatMessage.FromSystem("Give your answer in this form {main tag};{sub tag};{sub tag}"),
         ChatMessage.FromSystem(
-            "It is very important to you limit each response to maximum of 3 words and maximum of 3 topics")
+            "It is very important to you limit each response to maximum of 3 words and maximum of 3 tags. ")
     };
 
     private readonly ChatMessage[] _classificationDefaultPrependedMessages =
     {
-        ChatMessage.FromSystem("You are a language model that helps classify discussions."),
-        ChatMessage.FromSystem("The user has sent you the following message:")
+        ChatMessage.FromSystem("You are a language model that helps to create tags that classify discussions."),
+        ChatMessage.FromSystem("The user and an assistant have had the following discussion:")
     };
+
 
     private readonly string _llmModel;
     private readonly ILogger<OpenAiClient> _logger;
     private readonly IOpenAIService _openAiService;
+
+    private readonly ChatMessage[] _topicCompletionDefaultAppendedMessages =
+    {
+        ChatMessage.FromSystem(
+            "It is important that you keep your answer simple and short and it must be like a header, just a few words.")
+    };
+
+    private readonly ChatMessage[] _topicCompletionDefaultPrependedMessages =
+    {
+        ChatMessage.FromSystem("You are a language model that helps to generate a topic for given discussions."),
+        ChatMessage.FromSystem("The user and an assistant have had the following discussion:")
+    };
 
 
     public OpenAiClient(IOpenAIService openAiService, ILogger<OpenAiClient> logger, string llmModel = "gpt-3.5-turbo")
@@ -50,13 +63,13 @@ public class OpenAiClient : IOpenAiClient
     }
 
 
-    public async Task<(bool Success, string Response, string[] Errors)> GetCompletion(string prompt)
+    public async Task<(bool Success, string Content, string[] Errors)> GetCompletionAsync(string prompt)
     {
-        var result = await GetCompletion(new List<(string Role, string Message)>(), prompt);
+        var result = await GetCompletionAsync(new List<(string Role, string Message)>(), prompt);
         return result;
     }
 
-    public async Task<(bool Success, string Response, string[] Errors)> GetCompletion(
+    public async Task<(bool Success, string Content, string[] Errors)> GetCompletionAsync(
         IEnumerable<(string Role, string Message)> previousMessages, string prompt)
     {
         var messages = new List<ChatMessage>();
@@ -95,8 +108,8 @@ public class OpenAiClient : IOpenAiClient
         return (true, "", Array.Empty<string>());
     }
 
-    // Try to get chet session topic from openAI by giving it prompts and responses
-    public async Task<(bool Success, string Response, string[] Errors)> GetChatTopic(
+
+    public async Task<(bool Success, string Content, string[] Errors)> GetChatTagsAsync(
         (string Role, string Message)[] chatMessages)
     {
         var messages = new List<ChatMessage>();
@@ -132,14 +145,52 @@ public class OpenAiClient : IOpenAiClient
             return (true, completion.Choices.First().Message.Content, Array.Empty<string>());
         return (true, "", Array.Empty<string>());
     }
+
+    public async Task<(bool Success, string Content, string[] Errors)> GetChatTopicAsync(
+        (string Role, string Message)[] chatMessages)
+    {
+        var messages = new List<ChatMessage>();
+        messages.AddRange(_topicCompletionDefaultPrependedMessages);
+
+
+        var stringBuilder = new StringBuilder();
+        stringBuilder.Append("[");
+        foreach (var chatMessage in chatMessages)
+            stringBuilder.Append($"{{\"role\": \"{chatMessage.Role}\", \"content\": \"{chatMessage.Message}\"}},");
+        stringBuilder.Append("]");
+
+        var conversation = stringBuilder.ToString();
+        messages.Add(ChatMessage.FromUser(conversation));
+        messages.AddRange(_topicCompletionDefaultAppendedMessages);
+
+        var request = new ChatCompletionCreateRequest
+        {
+            Messages = messages,
+            Model = _llmModel
+        };
+        var completion = await _openAiService.ChatCompletion.CreateCompletion(request);
+
+        if (completion == null) _logger.LogError("Empty response from OpenAI");
+
+        if (completion?.Successful is not true)
+        {
+            _logger.LogError("Errors from OpenAI: {Errors}", completion?.Error?.Message);
+            return (false, "", new[] { completion.Error?.Message ?? "Unknown error" });
+        }
+
+        if (completion.Choices.Any())
+            return (true, completion.Choices.First().Message.Content, Array.Empty<string>());
+        return (true, "", Array.Empty<string>());
+    }
 }
 
 public interface IOpenAiClient
 {
-    Task<(bool Success, string Response, string[] Errors)> GetCompletion(string prompt);
+    Task<(bool Success, string Content, string[] Errors)> GetCompletionAsync(string prompt);
 
-    Task<(bool Success, string Response, string[] Errors)> GetCompletion(
+    Task<(bool Success, string Content, string[] Errors)> GetCompletionAsync(
         IEnumerable<(string Role, string Message)> previousMessages, string prompt);
 
-    Task<(bool Success, string Response, string[] Errors)> GetChatTopic((string Role, string Message)[] messages);
+    Task<(bool Success, string Content, string[] Errors)> GetChatTagsAsync((string Role, string Message)[] messages);
+    Task<(bool Success, string Content, string[] Errors)> GetChatTopicAsync((string Role, string Message)[] messages);
 }

@@ -1,12 +1,13 @@
-@page "/"
+
 @page "/Chat"
 @page "/Chat/{SessionId:guid}"
 @using ChatGptBlazorCore.Models
 @using Markdig
+@using Serilog
 @using ServiceAccessLayer.AiServices
 @using Blazored.Toast.Services
 @using System.Globalization
-@inject OpenAiClient OpenAiClient
+@inject IOpenAiClient OpenAiClient
 @inject IToastService ToastService
 @inject NavigationManager NavigationManager
 @inject AuthenticationStateProvider AuthenticationStateProvider
@@ -24,7 +25,7 @@
         <div class="sidebar">
             <div class="nav-scrollable">
                 <div class="nav-item">
-                    <button class="btn btn-primary">New chat</button>
+                    <button class="btn btn-primary" @onclick="NavigateToNewChat">New chat</button>
                 </div>
                 @foreach (var sessionTopicTuple in _sessionTopics)
                 {
@@ -41,18 +42,28 @@
     </div>
     <div class="col-md-9">
         <form onsubmit="@Send">
+
             <div class="mb-3">
                 <label for="chatTopic" class="form-label">Topic</label>
-                <input type="text" class="form-control" id="chatTopic" @bind="_currentSession.Topic">
+                <input type="text" class="form-control" id="chatTopic" @bind="_currentSession.Topic"/>
             </div>
-            <div class="row">
+            <div class="mb-3">
+                <label for="chatTags" class="form-label">Tags</label>
+                @{
+                    var tags = string.Join(";", _currentSession.Tags);
+                    <input type="text" class="form-control" id="chatTags" @bind="@tags"/>
+                }
+            </div>
+
+            <div class="mb-3">
+                <label for="chatInput" class="form-label">User prompt:</label>
                 <textarea class="form-control"  id="chatInput" @bind="_currentPrompt"></textarea>
             </div>
-            <div class="row">
-                <div class="col-md-2">
-                    <button type="submit" class="form-control mt-2 btn btn-primary">Send</button>
-                </div>
+
+            <div class="col-md-2">
+                <button type="submit" class="form-control mt-2 btn btn-primary">Send</button>
             </div>
+
 
         </form>
         @if (_waitingForResponse)
@@ -84,7 +95,7 @@
     bool _waitingForResponse;
     string _currentPrompt = "";
     ChatSession _currentSession;
-    //chat session topics
+
     (Guid Id, string Topic, DateTime Created)[] _sessionTopics = Array.Empty<(Guid Id, string Topic, DateTime Created)>();
 
 
@@ -116,6 +127,8 @@
                 Topic = "New topic"
             };
 
+            await ChatSessionRepository.AddChatSessionAsync(_currentSession);
+
 
             NavigationManager.NavigateTo($"/Chat/{_currentSession.Id}");
         }
@@ -138,7 +151,7 @@
             }
             else
             {
-                _currentSession = new ChatSession(user.Id)
+                _currentSession = new ChatSession(Guid.NewGuid(), user.Id)
                 {
                     Entries = new List<ChatEntry>(),
                     Topic = "New topic"
@@ -149,6 +162,11 @@
             }
         }
 
+
+        var updatedTopics = await GetSessionTopics(_currentSession.UserId);
+        _sessionTopics = updatedTopics;
+
+
         await base.OnParametersSetAsync();
     }
 
@@ -157,35 +175,39 @@
         _waitingForResponse = true;
 
         var replies = _currentSession.Entries.Select(e => (e.Role, e.Content)).ToList();
-        var result = await OpenAiClient.GetCompletion(replies, _currentPrompt);
+        var result = await OpenAiClient.GetCompletionAsync(replies, _currentPrompt);
 
         if (result.Success)
         {
             _currentSession.Entries.Add(new ChatEntry { Role = "user", Content = _currentPrompt });
-            _currentSession.Entries.Add(new ChatEntry { Role = "assistant", Content = result.Response });
+            _currentSession.Entries.Add(new ChatEntry { Role = "assistant", Content = result.Content });
         }
         else
         {
             ToastService.ShowError(result.Errors.First());
         }
         replies = _currentSession.Entries.Select(e => (e.Role, e.Content)).ToList();
-        var topicResponse = await OpenAiClient.GetChatTopic(replies.ToArray());
+        var topicResponse = await OpenAiClient.GetChatTopicAsync(replies.ToArray());
         if (topicResponse.Success)
         {
-            _currentSession.Topic = topicResponse.Response;
+            _currentSession.Topic = topicResponse.Content;
+
             var updateResult = await ChatSessionRepository.UpdateChatSessionAsync(_currentSession);
             if (!updateResult.Ok)
             {
                 ToastService.ShowError(updateResult.Errors.First());
             }
 
-            var updatedTopics = await ChatSessionRepository.GetUserChatSessionTopicsAsync(_currentSession.UserId);
-            _sessionTopics = updatedTopics.OrderByDescending(topic => topic.Created).ToArray();
+            var updatedTopics = await GetSessionTopics(_currentSession.UserId);
+            _sessionTopics = updatedTopics;
         }
         else
         {
             ToastService.ShowError(topicResponse.Errors.First());
         }
+        var tags = await GetTagsAsync(_currentSession.Entries);
+        _currentSession.Tags = tags.ToList();
+
         _currentPrompt = string.Empty;
         _waitingForResponse = false;
     }
@@ -203,6 +225,53 @@
         return $"{sessionTopicTuple.Topic} {sessionTopicTuple.Created.ToString("yy-MM-dd", CultureInfo.CurrentCulture)}";
     }
 
+
+    private async Task NavigateToNewChat()
+    {
+        var authState = AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var principal = authState.Result.User;
+        var user = await
+            UserRepository.GetUserAsync(principal.Identity.Name);
+
+        _currentSession = new ChatSession(Guid.NewGuid(), user.Id)
+        {
+            Entries = new List<ChatEntry>(),
+            Topic = "New topic"
+        };
+        await ChatSessionRepository.AddChatSessionAsync(_currentSession);
+
+        NavigationManager.NavigateTo($"/Chat/{_currentSession.Id}");
+    }
+
+    private async Task<string[]> GetTagsAsync(IEnumerable<ChatEntry> entries)
+    {
+        var tags = Array.Empty<string>();
+        var messages = entries.Select(e => (e.Role, e.Content)).ToArray();
+        var response = await OpenAiClient.GetChatTagsAsync(messages);
+        if (response.Success)
+        {
+            var tagsString = response.Content;
+            tags = tagsString.Split(';');
+        }
+        else
+        {
+            ToastService.ShowError("Failed to fetch tags");
+
+            foreach (var error in response.Errors)
+            {
+                Log.Logger.Error("Failed to fetch tags: {Error}", error, error);
+            }
+        }
+
+
+        return tags;
+    }
+
+    private async Task<(Guid Id, string Topic, DateTime Created)[]> GetSessionTopics(Guid userId)
+    {
+        var sessionTopics = await ChatSessionRepository.GetUserChatSessionTopicsAsync(userId);
+        return sessionTopics.OrderByDescending(topic => topic.Created).ToArray();
+    }
 
 
 }
