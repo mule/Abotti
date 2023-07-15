@@ -5,5 +5,8 @@
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=353fa136_002Dbc75_002D4df0_002D8f5f_002Dfa7e3bda7716/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="ShouldRenderPageCorrectly" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;
   &lt;TestAncestor&gt;
     &lt;TestId&gt;xUnit::C03A89D2-4BCB-4B4D-B5FE-856E0A9513D7::net7.0::ChatGptBlazorAppTests.ChatPageTests.ShouldRenderPageCorrectly&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::84998780-39A0-456F-B078-A58C9B5BD916::net7.0::DataAccessLayerTests.UserRepositoryFileDbTests.Should_be_able_to_initialize_an_empty_file_db&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::84998780-39A0-456F-B078-A58C9B5BD916::net7.0::DataAccessLayerTests.RepositoryFileDbTests.Should_be_able_to_initialize_an_empty_file_db&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::84998780-39A0-456F-B078-A58C9B5BD916::net7.0::DataAccessLayerTests.RepositoryFileDbTests.Should_be_able_to_initialize_a_file_db_with_data&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>

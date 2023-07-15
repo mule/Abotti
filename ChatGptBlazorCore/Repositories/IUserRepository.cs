@@ -1,10 +1,7 @@
 namespace ChatGptBlazorCore.Models;
 
-public interface IUserRepository
+public interface IUserRepository : IRepository<Guid, User>
 {
-    Task<User?> GetUserAsync(string userName);
-    User? GetUser(string userName);
-
-    Task<User?> AddUserAsync(string userName);
-    User? AddUser(string userName);
+    Task<(bool Ok, User? Result, string[] Errors)> GetByNameAsync(string userName);
+    (bool Ok, User? Result, string[] Errors) GetByName(string userName);
 }

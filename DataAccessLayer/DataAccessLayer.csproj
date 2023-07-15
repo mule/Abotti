@@ -1,0 +1,18 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\ChatGptBlazorCore\ChatGptBlazorCore.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Serilog" Version="3.0.1"/>
+        <PackageReference Include="System.IO.Abstractions" Version="19.2.29"/>
+    </ItemGroup>
+
+</Project>

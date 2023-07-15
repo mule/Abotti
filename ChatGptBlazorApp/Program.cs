@@ -31,10 +31,10 @@ try
     var adminUserId = Guid.Parse(adminUserIdStr);
     var adminUserName = builder.Configuration.GetValue<string>("AdminUser:UserName");
 
-    var testChatRepo = new InMemorySeededChatSessionRepository();
-    testChatRepo.AddChatSession(ChatSession.GenerateTestChatSession(adminUserId));
-    testChatRepo.AddChatSession(ChatSession.GenerateTestChatSession(adminUserId));
-    testChatRepo.AddChatSession(ChatSession.GenerateTestChatSession(adminUserId));
+    var testChatRepo = new InMemoryChatSessionRepository();
+    testChatRepo.Add(ChatSession.GenerateTestChatSession(adminUserId));
+    testChatRepo.Add(ChatSession.GenerateTestChatSession(adminUserId));
+    testChatRepo.Add(ChatSession.GenerateTestChatSession(adminUserId));
 
 
     builder.Host.UseSerilog();
@@ -72,11 +72,11 @@ try
         options.FallbackPolicy = options.DefaultPolicy;
     });
 
-    builder.Services.AddSingleton<IUserRepository, InMemorySeededUserRepository>(ctx =>
-        new InMemorySeededUserRepository(adminUserId, adminUserName));
+    builder.Services.AddSingleton<IUserRepository, InMemoryUserRepository>(ctx =>
+        new InMemoryUserRepository(adminUserId, adminUserName));
 
 
-    builder.Services.AddSingleton<IChatSessionRepository, InMemorySeededChatSessionRepository>(ctx => testChatRepo);
+    builder.Services.AddSingleton<IChatSessionRepository, InMemoryChatSessionRepository>(ctx => testChatRepo);
 
     var app = builder.Build();
 
