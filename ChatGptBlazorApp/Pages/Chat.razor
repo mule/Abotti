@@ -1,4 +1,3 @@
-
 @page "/Chat"
 @page "/Chat/{SessionId:guid}"
 @using ChatGptBlazorCore.Models
@@ -8,6 +7,7 @@
 @using ServiceAccessLayer.AiServices
 @using Blazored.Toast.Services
 @using System.Globalization
+@inject IJSRuntime JS
 @inject IOpenAiClient OpenAiClient
 @inject IToastService ToastService
 @inject NavigationManager NavigationManager
@@ -15,11 +15,6 @@
 @inject IUserRepository UserRepository
 @inject IChatSessionRepository ChatSessionRepository
 
-
-<h3>Chat</h3>
-<div>
-    @SessionId.ToString()
-</div>
 
 <div class="row">
     <div class="col-md-3">
@@ -42,25 +37,36 @@
         </div>
     </div>
     <div class="col-md-9">
-        <form onsubmit="@Send">
-
-            <div class="mb-3">
-                <label for="chatTopic" class="form-label">Topic</label>
-                <input type="text" class="form-control" id="chatTopic" @bind="_currentSession.Topic"/>
-            </div>
-            <div class="mb-3">
-                <label for="chatTags" class="form-label">Tags</label>
+        <div class="row">
+            <h3>@_currentSession.Topic</h3>
+            <div class="d-flex">
                 @{
-                    var tags = "";
-                    if (_currentSession?.Tags != null && _currentSession.Tags.Any())
+                    foreach (var tag in _currentSession.Tags)
                     {
-                        tags = string.Join(";", _currentSession?.Tags);
+                        <span class="badge rounded-pill bg-primary mx-2">@tag</span>
                     }
-
-                    <input type="text" class="form-control" id="chatTags" @bind="@tags"/>
                 }
             </div>
 
+        </div>
+        <div class="row">
+            <div id="chatOutput" class="overflow-y">
+                <ul>
+                    @foreach (var reply in _currentSession.Entries)
+                    {
+                        var contentHtml = Markdown.ToHtml(reply.Content);
+                        var roleClass = GetRoleColor(reply.Role);
+
+                        <li>
+                            <h5 class="@roleClass">@reply.Role:</h5>
+                            <div>@((MarkupString)contentHtml)</div>
+                        </li>
+                    }
+                </ul>
+            </div>
+        </div>
+
+        <form onsubmit="@Send">
             <div class="mb-3">
                 <label for="chatInput" class="form-label">User prompt:</label>
                 <textarea class="form-control"  id="chatInput" @bind="_currentPrompt"></textarea>
@@ -69,29 +75,13 @@
             <div class="col-md-2">
                 <button type="submit" class="form-control mt-2 btn btn-primary">Send</button>
             </div>
-
-
         </form>
         @if (_waitingForResponse)
         {
             <div class="row m-1">Waiting for response....</div>
         }
-        <div class="row" id="chatOutput">
-            <ul>
-                @foreach (var reply in _currentSession.Entries)
-                {
-                    var contentHtml = Markdown.ToHtml(reply.Content);
-
-                    <li>
-                        @reply.Role:
-                        <div>@((MarkupString)contentHtml)</div>
-                    </li>
-                }
-            </ul>
-        </div>
     </div>
 </div>
-
 
 @code {
 
@@ -103,6 +93,15 @@
     ChatSession _currentSession;
 
     TopicQueryResult[] _sessionTopics = Array.Empty<TopicQueryResult>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_currentSession.Entries.Count > 0)
+        {
+            await JS.InvokeVoidAsync("scrollToBottom");
+        }
+        await base.OnAfterRenderAsync(firstRender);
+    }
 
 
     protected override async Task OnInitializedAsync()
@@ -202,12 +201,6 @@
         {
             _currentSession.Topic = topicResponse.Content;
 
-            var updateResult = await ChatSessionRepository.UpdateAsync(_currentSession);
-            if (!updateResult.Ok)
-            {
-                ToastService.ShowError(updateResult.Errors.First());
-            }
-
             var updatedTopics = await GetSessionTopics(_currentSession.UserId);
             _sessionTopics = updatedTopics;
         }
@@ -216,7 +209,18 @@
             ToastService.ShowError(topicResponse.Errors.First());
         }
         var tags = await GetTagsAsync(_currentSession.Entries);
-        _currentSession.Tags = tags.ToList();
+
+        _currentSession.Tags = tags.Distinct().ToList();
+
+        var updateResult = await ChatSessionRepository.UpdateAsync(_currentSession);
+
+        if (!updateResult.Ok)
+        {
+            foreach (var error in updateResult.Errors)
+            {
+                ToastService.ShowError(error);
+            }
+        }
 
         _currentPrompt = string.Empty;
         _waitingForResponse = false;
@@ -248,6 +252,7 @@
             Entries = new List<ChatEntry>(),
             Topic = "New topic"
         };
+
         await ChatSessionRepository.AddAsync(_currentSession);
 
         NavigationManager.NavigateTo($"/Chat/{_currentSession.Id}");
@@ -281,6 +286,16 @@
     {
         var queryResult = await ChatSessionRepository.GetTopicByUserIdsAsync(userId);
         return queryResult.Result.OrderByDescending(topic => topic.Created).ToArray();
+    }
+
+    private string GetRoleColor(string role)
+    {
+        return role switch
+        {
+            "user" => "text-secondary",
+            "assistant" => "text-success",
+            _ => "dark"
+            };
     }
 
 

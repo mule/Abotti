@@ -5,7 +5,7 @@ using Serilog;
 
 namespace DataAccessLayer.Repositories;
 
-public class RepositoryFileDb<TK, T> : RepositoryBase<TK, T>, IInitializeableRepository<TK, T>
+public abstract class RepositoryFileDb<TK, T> : RepositoryBase<TK, T>, IInitializeableRepository<TK, T>
     where T : IModel<TK> where TK : notnull
 {
     private readonly string _dbFilePath;
@@ -91,7 +91,7 @@ public class RepositoryFileDb<TK, T> : RepositoryBase<TK, T>, IInitializeableRep
         var result = await base.AddAsync(item);
         if (result.Ok)
         {
-            var fileOperationResult = await PersistDataToFileAsync();
+            var fileOperationResult = await PersistDataToFileAsync(items);
             if (!fileOperationResult.Ok)
             {
                 result.Ok = false;
@@ -107,7 +107,7 @@ public class RepositoryFileDb<TK, T> : RepositoryBase<TK, T>, IInitializeableRep
         var result = base.Update(item);
         if (result.Ok)
         {
-            var fileOperationResult = await PersistDataToFileAsync();
+            var fileOperationResult = await PersistDataToFileAsync(items);
             if (!fileOperationResult.Ok)
             {
                 result.Ok = false;
@@ -119,7 +119,7 @@ public class RepositoryFileDb<TK, T> : RepositoryBase<TK, T>, IInitializeableRep
     }
 
 
-    private async Task<IDictionary<TK, T>?> LoadDbDataFromFileAsync(IFileSystem fileSystem, string dbFilePath)
+    protected virtual async Task<IDictionary<TK, T>?> LoadDbDataFromFileAsync(IFileSystem fileSystem, string dbFilePath)
     {
         var dbDataText = await fileSystem.File.ReadAllTextAsync(dbFilePath);
         var data = JsonSerializer.Deserialize<Dictionary<TK, T>>(dbDataText);
@@ -127,18 +127,18 @@ public class RepositoryFileDb<TK, T> : RepositoryBase<TK, T>, IInitializeableRep
         return data;
     }
 
-    private IDictionary<TK, T>? LoadDbDataFromFile(IFileSystem fileSystem, string dbFilePath)
+    protected virtual IDictionary<TK, T>? LoadDbDataFromFile(IFileSystem fileSystem, string dbFilePath)
     {
         var dbDataText = fileSystem.File.ReadAllText(dbFilePath);
         var data = JsonSerializer.Deserialize<Dictionary<TK, T>>(dbDataText);
         return data;
     }
 
-    private async Task<(bool Ok, string[] Errors)> PersistDataToFileAsync()
+    protected virtual async Task<(bool Ok, string[] Errors)> PersistDataToFileAsync(IDictionary<TK, T> data)
     {
         try
         {
-            await _fileSystem.File.WriteAllTextAsync(_dbFilePath, JsonSerializer.Serialize(items));
+            await _fileSystem.File.WriteAllTextAsync(_dbFilePath, JsonSerializer.Serialize(data));
             return (true, Array.Empty<string>());
         }
         catch (Exception e)
