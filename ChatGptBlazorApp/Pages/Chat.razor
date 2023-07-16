@@ -2,6 +2,7 @@
 @page "/Chat"
 @page "/Chat/{SessionId:guid}"
 @using ChatGptBlazorCore.Models
+@using ChatGptBlazorCore.QueryResults
 @using Markdig
 @using Serilog
 @using ServiceAccessLayer.AiServices
@@ -27,11 +28,11 @@
                 <div class="nav-item">
                     <button class="btn btn-primary" @onclick="NavigateToNewChat">New chat</button>
                 </div>
-                @foreach (var sessionTopicTuple in _sessionTopics)
+                @foreach (var sessionTopic in _sessionTopics)
                 {
                     <div class="nav-item px-3">
-                        <NavLink class="nav-link" href="@GetChatSessionLink(sessionTopicTuple.Id)">
-                            <span class="" aria-hidden="true">@GetSessionDescription(sessionTopicTuple)</span>
+                        <NavLink class="nav-link" href="@GetChatSessionLink(sessionTopic.Id)">
+                            <span class="" aria-hidden="true">@GetSessionDescription(sessionTopic)</span>
                         </NavLink>
                     </div>
                 }
@@ -50,7 +51,12 @@
             <div class="mb-3">
                 <label for="chatTags" class="form-label">Tags</label>
                 @{
-                    var tags = string.Join(";", _currentSession.Tags);
+                    var tags = "";
+                    if (_currentSession?.Tags != null && _currentSession.Tags.Any())
+                    {
+                        tags = string.Join(";", _currentSession?.Tags);
+                    }
+
                     <input type="text" class="form-control" id="chatTags" @bind="@tags"/>
                 }
             </div>
@@ -96,7 +102,7 @@
     string _currentPrompt = "";
     ChatSession _currentSession;
 
-    (Guid Id, string Topic, DateTime Created)[] _sessionTopics = Array.Empty<(Guid Id, string Topic, DateTime Created)>();
+    TopicQueryResult[] _sessionTopics = Array.Empty<TopicQueryResult>();
 
 
     protected override async Task OnInitializedAsync()
@@ -105,29 +111,33 @@
         var principal = authState.Result.User;
 
 
-        var user = await
-            UserRepository.GetUserAsync(principal.Identity.Name);
+        var queryResult = await
+            UserRepository.GetByNameAsync(principal.Identity.Name);
 
-        var sessionTopics = await ChatSessionRepository.GetUserChatSessionTopicsAsync(user.Id);
-        _sessionTopics = sessionTopics.OrderByDescending(topic => topic.Created).ToArray();
+        if (queryResult.Result != null)
+        {
+            var topicQueryResult = await ChatSessionRepository.GetTopicByUserIdsAsync(queryResult.Result.Id);
+            _sessionTopics = topicQueryResult.Result.OrderByDescending(topic => topic.Created).ToArray();
+        }
 
         if (SessionId.HasValue)
         {
-            var session = await ChatSessionRepository.GetChatSessionAsync(SessionId.Value, user.Id);
-            if (session != null)
+            var sessionQueryResult = await ChatSessionRepository.GetAsync(SessionId.Value);
+            if (sessionQueryResult.Result != null)
             {
-                _currentSession = session;
+                _currentSession = sessionQueryResult.Result;
             }
         }
         else
         {
-            _currentSession = new ChatSession(user.Id)
+            _currentSession = new ChatSession(Guid.NewGuid(), queryResult.Result.Id)
             {
                 Entries = new List<ChatEntry>(),
                 Topic = "New topic"
             };
 
-            await ChatSessionRepository.AddChatSessionAsync(_currentSession);
+
+            await ChatSessionRepository.AddAsync(_currentSession);
 
 
             NavigationManager.NavigateTo($"/Chat/{_currentSession.Id}");
@@ -140,31 +150,31 @@
         var principal = authState.Result.User;
 
 
-        var user = await
-            UserRepository.GetUserAsync(principal.Identity.Name);
+        var userQueryResult = await
+            UserRepository.GetByNameAsync(principal.Identity.Name);
         if (SessionId.HasValue)
         {
-            var session = await ChatSessionRepository.GetChatSessionAsync(SessionId.Value, user.Id);
-            if (session != null)
+            var queryResult = await ChatSessionRepository.GetAsync(SessionId.Value);
+            if (queryResult.Result != null)
             {
-                _currentSession = session;
+                _currentSession = queryResult.Result;
             }
             else
             {
-                _currentSession = new ChatSession(Guid.NewGuid(), user.Id)
+                _currentSession = new ChatSession(Guid.NewGuid(), userQueryResult.Result.Id)
                 {
                     Entries = new List<ChatEntry>(),
                     Topic = "New topic"
                 };
-                ChatSessionRepository.AddChatSessionAsync(_currentSession);
+                ChatSessionRepository.Add(_currentSession);
 
                 NavigationManager.NavigateTo($"/Chat/{_currentSession.Id}");
             }
         }
 
 
-        var updatedTopics = await GetSessionTopics(_currentSession.UserId);
-        _sessionTopics = updatedTopics;
+        var topics = await GetSessionTopics(_currentSession.UserId);
+        _sessionTopics = topics.OrderByDescending(topic => topic.Created).ToArray();
 
 
         await base.OnParametersSetAsync();
@@ -192,7 +202,7 @@
         {
             _currentSession.Topic = topicResponse.Content;
 
-            var updateResult = await ChatSessionRepository.UpdateChatSessionAsync(_currentSession);
+            var updateResult = await ChatSessionRepository.UpdateAsync(_currentSession);
             if (!updateResult.Ok)
             {
                 ToastService.ShowError(updateResult.Errors.First());
@@ -220,9 +230,9 @@
         return $"chat/{sessionId}";
     }
 
-    private object GetSessionDescription((Guid Id, string Topic, DateTime Created) sessionTopicTuple)
+    private object GetSessionDescription(TopicQueryResult sessionTopic)
     {
-        return $"{sessionTopicTuple.Topic} {sessionTopicTuple.Created.ToString("yy-MM-dd", CultureInfo.CurrentCulture)}";
+        return $"{sessionTopic.Topic} {sessionTopic.Created.ToString("yy-MM-dd", CultureInfo.CurrentCulture)}";
     }
 
 
@@ -230,15 +240,15 @@
     {
         var authState = AuthenticationStateProvider.GetAuthenticationStateAsync();
         var principal = authState.Result.User;
-        var user = await
-            UserRepository.GetUserAsync(principal.Identity.Name);
+        var queryResult = await
+            UserRepository.GetByNameAsync(principal.Identity.Name);
 
-        _currentSession = new ChatSession(Guid.NewGuid(), user.Id)
+        _currentSession = new ChatSession(Guid.NewGuid(), queryResult.Result.Id)
         {
             Entries = new List<ChatEntry>(),
             Topic = "New topic"
         };
-        await ChatSessionRepository.AddChatSessionAsync(_currentSession);
+        await ChatSessionRepository.AddAsync(_currentSession);
 
         NavigationManager.NavigateTo($"/Chat/{_currentSession.Id}");
     }
@@ -267,10 +277,10 @@
         return tags;
     }
 
-    private async Task<(Guid Id, string Topic, DateTime Created)[]> GetSessionTopics(Guid userId)
+    private async Task<TopicQueryResult[]> GetSessionTopics(Guid userId)
     {
-        var sessionTopics = await ChatSessionRepository.GetUserChatSessionTopicsAsync(userId);
-        return sessionTopics.OrderByDescending(topic => topic.Created).ToArray();
+        var queryResult = await ChatSessionRepository.GetTopicByUserIdsAsync(userId);
+        return queryResult.Result.OrderByDescending(topic => topic.Created).ToArray();
     }
 
 

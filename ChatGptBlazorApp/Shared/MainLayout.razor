@@ -2,7 +2,9 @@
 @inject IUserRepository UserRepository
 @inject IChatSessionRepository ChatSessionRepository
 @inject NavigationManager NavigationManager
+@inject IToastService ToastService
 @using ChatGptBlazorCore.Models
+@using Blazored.Toast.Services
 @inherits LayoutComponentBase
 
 
@@ -50,10 +52,14 @@
     protected override async Task OnInitializedAsync()
     {
         var principal = await AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var user = await UserRepository.GetUserAsync(principal.User.Identity.Name);
+        var queryResult = await UserRepository.GetByNameAsync(principal.User.Identity.Name);
 
-        if (user != null)
+        if (queryResult.Ok && queryResult.Result != null)
             UserVerified = true;
+        else
+        {
+            ToastService.ShowError("Unable to get user info. Please try again later.");
+        }
     }
 
 

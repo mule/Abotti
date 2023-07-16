@@ -1,12 +1,17 @@
 namespace ChatGptBlazorCore.Models;
 
-public class ChatSession
+public class ChatSession : IModel<Guid>
 {
+    public ChatSession()
+    {
+    }
+
     public ChatSession(Guid id, Guid userId)
     {
         Id = id;
         Created = DateTime.Now;
         UserId = userId;
+        Topic = string.Empty;
         Entries = new List<ChatEntry>();
         Tags = new List<string>();
     }
@@ -15,7 +20,6 @@ public class ChatSession
     {
     }
 
-    public Guid Id { get; set; }
     public Guid UserId { get; set; }
 
     public string Topic { get; set; }
@@ -25,6 +29,8 @@ public class ChatSession
     public DateTime Created { get; set; }
 
     public List<ChatEntry> Entries { get; set; }
+
+    public Guid Id { get; set; }
 
 
     public static ChatSession GenerateTestChatSession(Guid userId)
@@ -48,8 +54,8 @@ public class ChatSession
 
         return new ChatSession(userId)
         {
-            Topic = $"Test topic {idString}",
             Entries = entries,
+            Topic = $"Test topic for chat session {idString}",
             Tags = new List<string>
             {
                 "Test tag 1",

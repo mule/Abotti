@@ -1,6 +1,8 @@
+using System.IO.Abstractions;
 using Blazored.Toast;
 using ChatGptBlazorApp.Areas.Identity.Data;
 using ChatGptBlazorCore.Models;
+using DataAccessLayer.Repositories;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
@@ -30,11 +32,15 @@ try
     var adminUserIdStr = builder.Configuration.GetValue<string>("AdminUser:Id");
     var adminUserId = Guid.Parse(adminUserIdStr);
     var adminUserName = builder.Configuration.GetValue<string>("AdminUser:UserName");
+    var dataFilesPath = builder.Configuration.GetValue<string>("DataFilesPath");
 
-    var testChatRepo = new InMemorySeededChatSessionRepository();
-    testChatRepo.AddChatSession(ChatSession.GenerateTestChatSession(adminUserId));
-    testChatRepo.AddChatSession(ChatSession.GenerateTestChatSession(adminUserId));
-    testChatRepo.AddChatSession(ChatSession.GenerateTestChatSession(adminUserId));
+    if (!Directory.Exists(dataFilesPath))
+        Directory.CreateDirectory(dataFilesPath);
+
+    // var testChatRepo = new InMemoryChatSessionRepository();
+    // testChatRepo.Add(ChatSession.GenerateTestChatSession(adminUserId));
+    // testChatRepo.Add(ChatSession.GenerateTestChatSession(adminUserId));
+    // testChatRepo.Add(ChatSession.GenerateTestChatSession(adminUserId));
 
 
     builder.Host.UseSerilog();
@@ -72,11 +78,21 @@ try
         options.FallbackPolicy = options.DefaultPolicy;
     });
 
-    builder.Services.AddSingleton<IUserRepository, InMemorySeededUserRepository>(ctx =>
-        new InMemorySeededUserRepository(adminUserId, adminUserName));
+    var userRepo = new UserFileDb(new FileSystem(), Log.Logger, Path.Combine(dataFilesPath, "usersdb.json"));
+    await userRepo.InitializeAsync(new Dictionary<Guid, User>
+    {
+        { adminUserId, new User(adminUserId, adminUserName, "root") }
+    });
 
 
-    builder.Services.AddSingleton<IChatSessionRepository, InMemorySeededChatSessionRepository>(ctx => testChatRepo);
+    builder.Services.AddSingleton<IUserRepository, UserFileDb>(ctx => userRepo);
+
+    var chatRepo =
+        new ChatSessionFileDb(new FileSystem(), Log.Logger, Path.Combine(dataFilesPath, "chatsessionsdb.json"));
+    await chatRepo.InitializeAsync();
+
+
+    builder.Services.AddSingleton<IChatSessionRepository, ChatSessionFileDb>(ctx => chatRepo);
 
     var app = builder.Build();
 
