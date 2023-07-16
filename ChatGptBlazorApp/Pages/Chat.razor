@@ -6,7 +6,7 @@
 @using Serilog
 @using ServiceAccessLayer.AiServices
 @using Blazored.Toast.Services
-@using System.Globalization
+@using ChatGptBlazorApp.Components
 @inject IJSRuntime JS
 @inject IOpenAiClient OpenAiClient
 @inject IToastService ToastService
@@ -18,23 +18,7 @@
 
 <div class="row">
     <div class="col-md-3">
-        <div class="sidebar">
-            <div class="nav-scrollable">
-                <div class="nav-item">
-                    <button class="btn btn-primary" @onclick="NavigateToNewChat">New chat</button>
-                </div>
-                @foreach (var sessionTopic in _sessionTopics)
-                {
-                    <div class="nav-item px-3">
-                        <NavLink class="nav-link" href="@GetChatSessionLink(sessionTopic.Id)">
-                            <span class="" aria-hidden="true">@GetSessionDescription(sessionTopic)</span>
-                        </NavLink>
-                    </div>
-                }
-
-            </div>
-
-        </div>
+        <ChatSessionsList SessionTopics="@_sessionTopics"/>
     </div>
     <div class="col-md-9">
         <div class="row">
@@ -226,37 +210,6 @@
         _waitingForResponse = false;
     }
 
-    private string GetChatSessionLink(Guid? sessionId)
-    {
-        if (sessionId == null)
-            return $"chat/{Guid.NewGuid()}";
-
-        return $"chat/{sessionId}";
-    }
-
-    private object GetSessionDescription(TopicQueryResult sessionTopic)
-    {
-        return $"{sessionTopic.Topic} {sessionTopic.Created.ToString("yy-MM-dd", CultureInfo.CurrentCulture)}";
-    }
-
-
-    private async Task NavigateToNewChat()
-    {
-        var authState = AuthenticationStateProvider.GetAuthenticationStateAsync();
-        var principal = authState.Result.User;
-        var queryResult = await
-            UserRepository.GetByNameAsync(principal.Identity.Name);
-
-        _currentSession = new ChatSession(Guid.NewGuid(), queryResult.Result.Id)
-        {
-            Entries = new List<ChatEntry>(),
-            Topic = "New topic"
-        };
-
-        await ChatSessionRepository.AddAsync(_currentSession);
-
-        NavigationManager.NavigateTo($"/Chat/{_currentSession.Id}");
-    }
 
     private async Task<string[]> GetTagsAsync(IEnumerable<ChatEntry> entries)
     {

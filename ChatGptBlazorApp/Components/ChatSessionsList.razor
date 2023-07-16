@@ -1,0 +1,58 @@
+@using ChatGptBlazorCore.QueryResults
+@using ChatGptBlazorCore.Models
+@using System.Globalization
+@inject IUserRepository UserRepository
+@inject IChatSessionRepository ChatSessionRepository
+@inject NavigationManager NavigationManager
+
+<div class="sidebar">
+    <div class="nav-scrollable">
+        <div class="nav-item mb-2">
+            <button class="btn btn-primary" @onclick="NavigateToNewChat">New chat</button>
+        </div>
+        @{
+            var topicsGroupedByDate = SessionTopics.GroupBy(x => x.Created.Date);
+
+
+            foreach (var topicGroup in topicsGroupedByDate)
+            {
+                var topicGroupDateStr = topicGroup.Key.ToString("dd-MM-yyyy", CultureInfo.CurrentCulture);
+                <h6 class="nav-header">@topicGroupDateStr</h6>
+                foreach (var sessionTopic in topicGroup)
+                {
+                    <div class="nav-item px-3">
+                        <NavLink class="nav-link" href="@GetChatSessionLink(sessionTopic.Id)">
+                            <span class="" aria-hidden="true">@sessionTopic.Topic</span>
+                        </NavLink>
+                    </div>
+                }
+            }
+        }
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public TopicQueryResult[] SessionTopics { get; set; }
+
+    private void NavigateToNewChat()
+    {
+        var sessionId = Guid.NewGuid();
+        NavigationManager.NavigateTo($"/Chat/{sessionId}");
+    }
+
+    private string GetChatSessionLink(Guid? sessionId)
+    {
+        if (sessionId == null)
+            return $"chat/{Guid.NewGuid()}";
+
+        return $"chat/{sessionId}";
+    }
+
+    private object GetSessionDescription(TopicQueryResult sessionTopic)
+    {
+        return $"{sessionTopic.Topic}";
+    }
+
+}
