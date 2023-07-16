@@ -25,4 +25,28 @@ public class ChatSessionFileDb : RepositoryFileDb<Guid, ChatSession>, IChatSessi
 
         return (true, topicQueryResults, Array.Empty<string>());
     }
+
+    protected override async Task<IDictionary<Guid, ChatSession>?> LoadDbDataFromFileAsync(IFileSystem fileSystem,
+        string dbFilePath)
+    {
+        var data = await base.LoadDbDataFromFileAsync(fileSystem, dbFilePath);
+
+        var cleanedData = data?.Values.Where(item => item.Entries.Any()).ToDictionary(k => k.Id, v => v);
+        return cleanedData;
+    }
+
+    protected override IDictionary<Guid, ChatSession>? LoadDbDataFromFile(IFileSystem fileSystem, string dbFilePath)
+    {
+        var data = base.LoadDbDataFromFile(fileSystem, dbFilePath);
+
+        var cleanedData = data?.Values.Where(item => item.Entries.Any()).ToDictionary(k => k.Id, v => v);
+        return cleanedData;
+    }
+
+    protected override async Task<(bool Ok, string[] Errors)> PersistDataToFileAsync(
+        IDictionary<Guid, ChatSession> data)
+    {
+        var cleanedData = data.Values.Where(item => item.Entries.Any()).ToDictionary(k => k.Id, v => v);
+        return await base.PersistDataToFileAsync(cleanedData);
+    }
 }
