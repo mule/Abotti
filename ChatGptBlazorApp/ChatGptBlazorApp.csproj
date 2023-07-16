@@ -9,6 +9,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\ChatGptBlazorCore\ChatGptBlazorCore.csproj"/>
+        <ProjectReference Include="..\DataAccessLayer\DataAccessLayer.csproj"/>
         <ProjectReference Include="..\ServiceAccessLayer\ServiceAccessLayer.csproj"/>
     </ItemGroup>
 
@@ -31,6 +32,7 @@
         <PackageReference Include="Serilog.AspNetCore" Version="7.0.0"/>
         <PackageReference Include="Serilog.Sinks.SpectreConsole" Version="0.3.3"/>
         <PackageReference Include="Spectre.Console" Version="0.47.0"/>
+        <PackageReference Include="System.IO.Abstractions" Version="19.2.29"/>
     </ItemGroup>
 
 </Project>

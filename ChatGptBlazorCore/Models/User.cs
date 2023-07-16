@@ -4,6 +4,9 @@ public class User : IModel<Guid>
 {
     public static string DefaultRole = "user";
 
+    public User()
+    {
+    }
 
     public User(string userName) : this(Guid.NewGuid(), userName, DefaultRole)
     {

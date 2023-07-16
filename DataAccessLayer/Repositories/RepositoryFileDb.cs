@@ -25,11 +25,33 @@ public class RepositoryFileDb<TK, T> : RepositoryBase<TK, T>, IInitializeableRep
 
     public void Initialize()
     {
+        Initialize(new Dictionary<TK, T>());
     }
 
     public void Initialize(IDictionary<TK, T> initialState)
     {
-        throw new NotImplementedException();
+        if (IsInitialized)
+        {
+            _logger.Warning("Repository is already initialized");
+            return;
+        }
+
+        if (!_fileSystem.File.Exists(_dbFilePath))
+        {
+            _logger?.Information("Creating new db file {DbFilePath}", _dbFilePath);
+
+            _fileSystem.File.WriteAllText(_dbFilePath, JsonSerializer.Serialize(items));
+        }
+        else
+        {
+            var persistedData = LoadDbDataFromFile(_fileSystem, _dbFilePath);
+            if (persistedData != null)
+                items = persistedData;
+            else
+                _logger.Warning("Failed to load data from db file {DbFilePath}", _dbFilePath);
+        }
+
+        IsInitialized = true;
     }
 
     public async Task InitializeAsync()
@@ -64,21 +86,66 @@ public class RepositoryFileDb<TK, T> : RepositoryBase<TK, T>, IInitializeableRep
         await InitializeAsync();
     }
 
-    public void Initialize(IDictionary<Guid, User> initialState)
+    public override async Task<(bool Ok, string[] Errors)> AddAsync(T item)
     {
-        throw new NotImplementedException();
+        var result = await base.AddAsync(item);
+        if (result.Ok)
+        {
+            var fileOperationResult = await PersistDataToFileAsync();
+            if (!fileOperationResult.Ok)
+            {
+                result.Ok = false;
+                result.Errors = fileOperationResult.Errors;
+            }
+        }
+
+        return result;
+    }
+
+    public override async Task<(bool Ok, string[] Errors)> UpdateAsync(T item)
+    {
+        var result = base.Update(item);
+        if (result.Ok)
+        {
+            var fileOperationResult = await PersistDataToFileAsync();
+            if (!fileOperationResult.Ok)
+            {
+                result.Ok = false;
+                result.Errors = fileOperationResult.Errors;
+            }
+        }
+
+        return result;
     }
 
 
     private async Task<IDictionary<TK, T>?> LoadDbDataFromFileAsync(IFileSystem fileSystem, string dbFilePath)
     {
-        using var dbDataStream = fileSystem.File.OpenText(dbFilePath);
-        var data = await JsonSerializer.DeserializeAsync<Dictionary<TK, T>>(dbDataStream.BaseStream,
-            new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                WriteIndented = true
-            });
+        var dbDataText = await fileSystem.File.ReadAllTextAsync(dbFilePath);
+        var data = JsonSerializer.Deserialize<Dictionary<TK, T>>(dbDataText);
+
         return data;
+    }
+
+    private IDictionary<TK, T>? LoadDbDataFromFile(IFileSystem fileSystem, string dbFilePath)
+    {
+        var dbDataText = fileSystem.File.ReadAllText(dbFilePath);
+        var data = JsonSerializer.Deserialize<Dictionary<TK, T>>(dbDataText);
+        return data;
+    }
+
+    private async Task<(bool Ok, string[] Errors)> PersistDataToFileAsync()
+    {
+        try
+        {
+            await _fileSystem.File.WriteAllTextAsync(_dbFilePath, JsonSerializer.Serialize(items));
+            return (true, Array.Empty<string>());
+        }
+        catch (Exception e)
+        {
+            var errorMessage = $"Failed to persist data to db file {_dbFilePath} because {e.Message}";
+            _logger.Error(e, errorMessage, _dbFilePath);
+            return (false, new[] { errorMessage });
+        }
     }
 }

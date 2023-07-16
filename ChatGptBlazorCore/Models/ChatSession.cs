@@ -2,6 +2,10 @@ namespace ChatGptBlazorCore.Models;
 
 public class ChatSession : IModel<Guid>
 {
+    public ChatSession()
+    {
+    }
+
     public ChatSession(Guid id, Guid userId)
     {
         Id = id;

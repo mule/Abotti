@@ -51,7 +51,12 @@
             <div class="mb-3">
                 <label for="chatTags" class="form-label">Tags</label>
                 @{
-                    var tags = string.Join(";", _currentSession.Tags);
+                    var tags = "";
+                    if (_currentSession?.Tags != null && _currentSession.Tags.Any())
+                    {
+                        tags = string.Join(";", _currentSession?.Tags);
+                    }
+
                     <input type="text" class="form-control" id="chatTags" @bind="@tags"/>
                 }
             </div>

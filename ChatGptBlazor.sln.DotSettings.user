@@ -8,5 +8,6 @@
     &lt;TestId&gt;xUnit::84998780-39A0-456F-B078-A58C9B5BD916::net7.0::DataAccessLayerTests.UserRepositoryFileDbTests.Should_be_able_to_initialize_an_empty_file_db&lt;/TestId&gt;
     &lt;TestId&gt;xUnit::84998780-39A0-456F-B078-A58C9B5BD916::net7.0::DataAccessLayerTests.RepositoryFileDbTests.Should_be_able_to_initialize_an_empty_file_db&lt;/TestId&gt;
     &lt;TestId&gt;xUnit::84998780-39A0-456F-B078-A58C9B5BD916::net7.0::DataAccessLayerTests.RepositoryFileDbTests.Should_be_able_to_initialize_a_file_db_with_data&lt;/TestId&gt;
+    &lt;TestId&gt;xUnit::84998780-39A0-456F-B078-A58C9B5BD916::net7.0::DataAccessLayerTests.RepositoryFileDbTests&lt;/TestId&gt;
   &lt;/TestAncestor&gt;
 &lt;/SessionState&gt;</s:String></wpf:ResourceDictionary>
