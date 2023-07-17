@@ -1,0 +1,20 @@
+  
+@page "/"
+@page "/Index"
+@inject NavigationManager NavigationManager 
+
+<h3>Index</h3>
+
+@code {
+
+    /* Place holder page for the index page. For now the landing page is /chat */
+
+    protected override async Task OnInitializedAsync()
+    {
+        NavigationManager.NavigateTo("/chat");
+        await base.OnInitializedAsync();
+    }
+
+
+
+}

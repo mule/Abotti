@@ -1,4 +1,4 @@
-﻿namespace OpenAI.GPT3.ObjectModels.SharedModels;
+﻿namespace OpenAI.ObjectModels.SharedModels;
 
 public interface IOpenAiModels
 {
@@ -40,6 +40,7 @@ public interface IOpenAiModels
     public interface IFile
     {
         public byte[] File { get; set; }
+        public Stream FileStream { get; set; }
         public string FileName { get; set; }
     }
 }

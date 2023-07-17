@@ -35,3 +35,7 @@ packages/
 *.csproj.nuget.user.props
 *.csproj.nuget.user.targets
 /logs/
+/usersdb.json
+/Data/chatsessionsdb.json
+/chatsessionsdb.json
+/Data/usersdb.json

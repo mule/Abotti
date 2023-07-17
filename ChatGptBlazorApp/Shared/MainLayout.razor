@@ -1,4 +1,10 @@
 ﻿@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IUserRepository UserRepository
+@inject IChatSessionRepository ChatSessionRepository
+@inject NavigationManager NavigationManager
+@inject IToastService ToastService
+@using ChatGptBlazorCore.Models
+@using Blazored.Toast.Services
 @inherits LayoutComponentBase
 
 
@@ -7,16 +13,22 @@
 <ErrorBoundary>
     <CascadingAuthenticationState>
         <div class="page">
-            <div class="sidebar">
-                <NavMenu/>
-            </div>
+            @* <div class="sidebar"> *@
+            @*     <CascadingValue Value="@ChatSessionTopics"> *@
+            @*         <NavMenu OnNewTopic="HandleNewTopicRequest"/> *@
+            @*     </CascadingValue> *@
+            @* </div> *@
             <main>
                 <div class="top-row px-4 d-flex justify-content-end align-items-center w-100">
                     <div class="d-flex align-items-center">
                         <a class="mx-3" href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
                         <AuthorizeView>
                             <Authorized>
-                                <p class="mx-3 mb-0">Hello, @context.User.Identity.Name!</p>
+                                @UserVerified.ToString()
+                                <p class="mx-3 mb-0">
+                                    Hello, @context.User.Identity.Name!
+                                    <span class="badge bg-secondary">@(UserVerified ? "Verified" : "Not verified")</span>
+                                </p>
                             </Authorized>
                             <NotAuthorized>
                                 <button class="btn btn-primary mx-3" href="MicrosoftIdentity/Account/SignIn">Login</button>
@@ -34,6 +46,22 @@
 </ErrorBoundary>
 
 @code {
+
+    public bool UserVerified { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var principal = await AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var queryResult = await UserRepository.GetByNameAsync(principal.User.Identity.Name);
+
+        if (queryResult.Ok && queryResult.Result != null)
+            UserVerified = true;
+        else
+        {
+            ToastService.ShowError("Unable to get user info. Please try again later.");
+        }
+    }
+
 
 }
 

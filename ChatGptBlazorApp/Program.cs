@@ -1,18 +1,23 @@
+using System.IO.Abstractions;
 using Blazored.Toast;
-using ChatGptBlazorApp.AiServices;
 using ChatGptBlazorApp.Areas.Identity.Data;
+using ChatGptBlazorCore.Models;
+using DataAccessLayer.Repositories;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Identity.Web;
 using Microsoft.Identity.Web.UI;
-using OpenAI.GPT3.Extensions;
+using OpenAI.Extensions;
+using OpenAI.Interfaces;
+using OpenAI.ObjectModels;
 using Serilog;
-using Serilog.Sinks.SpectreConsole;
+using ServiceAccessLayer.AiServices;
 
 // Configure Serilog logger
 Log.Logger = new LoggerConfiguration()
     .MinimumLevel.Debug()
-    .WriteTo.SpectreConsole("{Timestamp:HH:mm:ss} [{Level:u4}] {Message:lj}{NewLine}{Exception}")
+    //.WriteTo.SpectreConsole("{Timestamp:HH:mm:ss} [{Level:u4}] {Message:lj}{NewLine}{Exception}")
+    .WriteTo.Console()
     .WriteTo.File("logs/log.txt", rollingInterval: RollingInterval.Day)
     .CreateLogger();
 
@@ -23,6 +28,19 @@ try
                            throw new InvalidOperationException(
                                "Connection string 'ChatGptBlazorAppContextConnection' not found.");
     var config = builder.Configuration;
+
+    var adminUserIdStr = builder.Configuration.GetValue<string>("AdminUser:Id");
+    var adminUserId = Guid.Parse(adminUserIdStr);
+    var adminUserName = builder.Configuration.GetValue<string>("AdminUser:UserName");
+    var dataFilesPath = builder.Configuration.GetValue<string>("DataFilesPath");
+
+    if (!Directory.Exists(dataFilesPath))
+        Directory.CreateDirectory(dataFilesPath);
+
+    // var testChatRepo = new InMemoryChatSessionRepository();
+    // testChatRepo.Add(ChatSession.GenerateTestChatSession(adminUserId));
+    // testChatRepo.Add(ChatSession.GenerateTestChatSession(adminUserId));
+    // testChatRepo.Add(ChatSession.GenerateTestChatSession(adminUserId));
 
 
     builder.Host.UseSerilog();
@@ -42,7 +60,9 @@ try
     builder.Services.AddRazorPages();
     builder.Services.AddServerSideBlazor();
     builder.Services.AddOpenAIService();
-    builder.Services.AddScoped<OpenAiClient>();
+    builder.Services.AddTransient<IOpenAiClient>(provider => new OpenAiClient(
+        provider.GetService<IOpenAIService>(),
+        provider.GetService<ILogger<OpenAiClient>>(), Models.Gpt_3_5_Turbo));
     builder.Services.AddBlazoredToast();
     builder.Services.AddControllersWithViews(options =>
     {
@@ -57,6 +77,22 @@ try
         // By default, all incoming requests will be authorized according to the default policy
         options.FallbackPolicy = options.DefaultPolicy;
     });
+
+    var userRepo = new UserFileDb(new FileSystem(), Log.Logger, Path.Combine(dataFilesPath, "usersdb.json"));
+    await userRepo.InitializeAsync(new Dictionary<Guid, User>
+    {
+        { adminUserId, new User(adminUserId, adminUserName, "root") }
+    });
+
+
+    builder.Services.AddSingleton<IUserRepository, UserFileDb>(ctx => userRepo);
+
+    var chatRepo =
+        new ChatSessionFileDb(new FileSystem(), Log.Logger, Path.Combine(dataFilesPath, "chatsessionsdb.json"));
+    await chatRepo.InitializeAsync();
+
+
+    builder.Services.AddSingleton<IChatSessionRepository, ChatSessionFileDb>(ctx => chatRepo);
 
     var app = builder.Build();
 
@@ -91,6 +127,7 @@ finally
 {
     Log.CloseAndFlush();
 }
+
 
 public class AssemblyLocator
 {
