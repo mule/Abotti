@@ -2,6 +2,7 @@
 
 
 using System.Diagnostics;
+using Azure.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -34,14 +35,28 @@ try
         .CreateLogger();
 
 
-    var config = new ConfigurationBuilder()
-        .AddUserSecrets<Program>()
-        .Build();
+    var azureKeyVaultUriStr = Environment.GetEnvironmentVariable("AZURE_KEYVAULT_URI");
+    var configBldr = new ConfigurationBuilder()
+        .AddUserSecrets<Program>();
+
+    if (!string.IsNullOrEmpty(azureKeyVaultUriStr))
+    {
+        Log.Logger.Information("Adding Azure Key Vault to configuration");
+        configBldr.AddAzureKeyVault(new Uri(azureKeyVaultUriStr), new DefaultAzureCredential());
+    }
+
+    var config = configBldr.Build();
+
+    var openAiKey = config["openai-api-key"] ?? config["OpenAIServiceOptions:ApiKey"];
+
+    if (string.IsNullOrEmpty(openAiKey)) throw new Exception("OpenAI key not found in configuration");
+
+
     AnsiConsole.WriteLine("Welcome to OpenAi development console");
 
     var services = new ServiceCollection()
         .AddLogging()
-        .AddOpenAIService()
+        .AddOpenAIService(options => { options.ApiKey = openAiKey; })
         .Services.AddSingleton<IConfiguration>(config)
         .AddTransient(provider => new OpenAiClient(
             provider.GetService<IOpenAIService>(),
