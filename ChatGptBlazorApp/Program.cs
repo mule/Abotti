@@ -1,4 +1,5 @@
 using System.IO.Abstractions;
+using Azure.Identity;
 using Blazored.Toast;
 using ChatGptBlazorApp.Areas.Identity.Data;
 using ChatGptBlazorCore.Models;
@@ -24,6 +25,19 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     var builder = WebApplication.CreateBuilder(args);
+    builder.Configuration.AddUserSecrets<Program>();
+    builder.Configuration.AddEnvironmentVariables();
+
+    var azureKeyVaultUriStr = builder.Configuration.GetValue<string>("AzureKeyVaultUri");
+    if (!string.IsNullOrEmpty(azureKeyVaultUriStr))
+    {
+        Log.Information("Adding Azure Key Vault to configuration");
+        var azureKeyVaultUri = new Uri(azureKeyVaultUriStr);
+        builder.Configuration.AddAzureKeyVault(azureKeyVaultUri, new DefaultAzureCredential());
+    }
+
+    var openAiKey = builder.Configuration["openai-api-key"] ?? builder.Configuration["OpenAIServiceOptions:ApiKey"];
+
     var connectionString = builder.Configuration.GetConnectionString("ChatGptBlazorAppContextConnection") ??
                            throw new InvalidOperationException(
                                "Connection string 'ChatGptBlazorAppContextConnection' not found.");
@@ -49,7 +63,6 @@ try
     builder.Services.AddDefaultIdentity<ChatGptBlazorAppUser>(options => options.SignIn.RequireConfirmedAccount = true)
         .AddEntityFrameworkStores<ChatGptBlazorAppContext>();
 
-    builder.Configuration.AddUserSecrets<Program>();
 
     builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme);
     builder.Services.AddMicrosoftIdentityWebAppAuthentication(builder.Configuration);
@@ -59,7 +72,7 @@ try
 // Add services to the container.
     builder.Services.AddRazorPages();
     builder.Services.AddServerSideBlazor();
-    builder.Services.AddOpenAIService();
+    builder.Services.AddOpenAIService(options => { options.ApiKey = openAiKey; });
     builder.Services.AddTransient<IOpenAiClient>(provider => new OpenAiClient(
         provider.GetService<IOpenAIService>(),
         provider.GetService<ILogger<OpenAiClient>>(), Models.Gpt_3_5_Turbo));
