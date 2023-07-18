@@ -32,6 +32,8 @@ try
         // .WriteTo.SpectreConsole("{Timestamp:HH:mm:ss} [{Level:u4}] {Message:lj}{NewLine}{Exception}")   
         .WriteTo.Console()
         .CreateLogger();
+
+
     var config = new ConfigurationBuilder()
         .AddUserSecrets<Program>()
         .Build();
