@@ -11,6 +11,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Azure.Storage.Blobs" Version="12.17.0"/>
         <PackageReference Include="Serilog" Version="3.0.1"/>
         <PackageReference Include="System.IO.Abstractions" Version="19.2.29"/>
     </ItemGroup>

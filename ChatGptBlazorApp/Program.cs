@@ -1,5 +1,5 @@
-using System.IO.Abstractions;
 using Azure.Identity;
+using Azure.Storage.Blobs;
 using Blazored.Toast;
 using ChatGptBlazorApp.Areas.Identity.Data;
 using ChatGptBlazorCore.Models;
@@ -13,6 +13,7 @@ using OpenAI.Interfaces;
 using OpenAI.ObjectModels;
 using Serilog;
 using ServiceAccessLayer.AiServices;
+using Spectre.Console;
 
 // Configure Serilog logger
 Log.Logger = new LoggerConfiguration()
@@ -28,6 +29,7 @@ try
     builder.Configuration.AddUserSecrets<Program>();
     builder.Configuration.AddEnvironmentVariables();
 
+
     var azureKeyVaultUriStr = builder.Configuration.GetValue<string>("AzureKeyVaultUri");
     if (!string.IsNullOrEmpty(azureKeyVaultUriStr))
     {
@@ -36,7 +38,11 @@ try
         builder.Configuration.AddAzureKeyVault(azureKeyVaultUri, new DefaultAzureCredential());
     }
 
+    AnsiConsole.WriteLine(builder.Configuration.GetDebugView());
+
     var openAiKey = builder.Configuration["openai-api-key"] ?? builder.Configuration["OpenAIServiceOptions:ApiKey"];
+    var blobStorageConnectionString = builder.Configuration["BlobStorage:ConnectionString"];
+    var blobStorageContainerName = builder.Configuration["BlobStorage:ContainerName"];
 
     var connectionString = builder.Configuration.GetConnectionString("ChatGptBlazorAppContextConnection") ??
                            throw new InvalidOperationException(
@@ -91,21 +97,23 @@ try
         options.FallbackPolicy = options.DefaultPolicy;
     });
 
-    var userRepo = new UserFileDb(new FileSystem(), Log.Logger, Path.Combine(dataFilesPath, "usersdb.json"));
+    var blobContainerClient = new BlobContainerClient(blobStorageConnectionString, blobStorageContainerName);
+    await blobContainerClient.CreateIfNotExistsAsync();
+    var userRepo = new UserBlobStorageRepo(blobContainerClient.GetBlobClient("users.json"), Log.Logger);
     await userRepo.InitializeAsync(new Dictionary<Guid, User>
     {
         { adminUserId, new User(adminUserId, adminUserName, "root") }
     });
 
 
-    builder.Services.AddSingleton<IUserRepository, UserFileDb>(ctx => userRepo);
+    builder.Services.AddSingleton<IUserRepository, UserBlobStorageRepo>(ctx => userRepo);
 
-    var chatRepo =
-        new ChatSessionFileDb(new FileSystem(), Log.Logger, Path.Combine(dataFilesPath, "chatsessionsdb.json"));
-    await chatRepo.InitializeAsync();
+    var chatSessionRepo =
+        new ChatSessionBlobStorageRepository(blobContainerClient.GetBlobClient("chatSessions.json"), Log.Logger);
+    await chatSessionRepo.InitializeAsync();
 
 
-    builder.Services.AddSingleton<IChatSessionRepository, ChatSessionFileDb>(ctx => chatRepo);
+    builder.Services.AddSingleton<IChatSessionRepository, ChatSessionBlobStorageRepository>(ctx => chatSessionRepo);
 
     var app = builder.Build();
 

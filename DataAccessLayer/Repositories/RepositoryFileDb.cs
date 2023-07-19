@@ -5,7 +5,7 @@ using Serilog;
 
 namespace DataAccessLayer.Repositories;
 
-public abstract class RepositoryFileDb<TK, T> : RepositoryBase<TK, T>, IInitializeableRepository<TK, T>
+public class RepositoryFileDb<TK, T> : RepositoryBase<TK, T>, IInitializeableRepository<TK, T>
     where T : IModel<TK> where TK : notnull
 {
     private readonly string _dbFilePath;
