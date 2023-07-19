@@ -23,12 +23,12 @@ public class RepositoryFileDb<TK, T> : RepositoryBase<TK, T>, IInitializeableRep
     public bool IsInitialized { get; private set; }
 
 
-    public void Initialize()
+    public void Initialize(bool overwrite = false)
     {
-        Initialize(new Dictionary<TK, T>());
+        Initialize(new Dictionary<TK, T>(), overwrite);
     }
 
-    public void Initialize(IDictionary<TK, T> initialState)
+    public void Initialize(IDictionary<TK, T> initialState, bool overwrite = false)
     {
         if (IsInitialized)
         {
@@ -36,10 +36,10 @@ public class RepositoryFileDb<TK, T> : RepositoryBase<TK, T>, IInitializeableRep
             return;
         }
 
-        if (!_fileSystem.File.Exists(_dbFilePath))
-        {
-            _logger?.Information("Creating new db file {DbFilePath}", _dbFilePath);
+        items = initialState;
 
+        if (!_fileSystem.File.Exists(_dbFilePath) || overwrite)
+        {
             _fileSystem.File.WriteAllText(_dbFilePath, JsonSerializer.Serialize(items));
         }
         else
@@ -54,7 +54,12 @@ public class RepositoryFileDb<TK, T> : RepositoryBase<TK, T>, IInitializeableRep
         IsInitialized = true;
     }
 
-    public async Task InitializeAsync()
+    public async Task InitializeAsync(bool overwrite = false)
+    {
+        await InitializeAsync(new Dictionary<TK, T>(), overwrite);
+    }
+
+    public async Task InitializeAsync(IDictionary<TK, T> initialState, bool overwrite = false)
     {
         if (IsInitialized)
         {
@@ -62,10 +67,10 @@ public class RepositoryFileDb<TK, T> : RepositoryBase<TK, T>, IInitializeableRep
             return;
         }
 
-        if (!_fileSystem.File.Exists(_dbFilePath))
+        items = initialState;
+
+        if (!_fileSystem.File.Exists(_dbFilePath) || overwrite)
         {
-            _logger?.Information("Creating new db file {DbFilePath}", _dbFilePath);
-            ;
             await _fileSystem.File.WriteAllTextAsync(_dbFilePath, JsonSerializer.Serialize(items));
         }
         else
@@ -80,11 +85,6 @@ public class RepositoryFileDb<TK, T> : RepositoryBase<TK, T>, IInitializeableRep
         IsInitialized = true;
     }
 
-    public async Task InitializeAsync(IDictionary<TK, T> initialState)
-    {
-        items = initialState;
-        await InitializeAsync();
-    }
 
     public override async Task<(bool Ok, string[] Errors)> AddAsync(T item)
     {
