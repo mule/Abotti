@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Hosting;
 
 namespace ChatGptBlazorAppTests;
 
-[Category("PlaywrightTest")]
 [Collection(PlaywrightFixture.PlaywrightCollection)]
 public class ChatPageTests
 {
@@ -15,6 +14,7 @@ public class ChatPageTests
     }
 
 
+    [Category("PlaywrightTest")]
     [Fact]
     public async Task ShouldRenderPageCorrectly()
     {

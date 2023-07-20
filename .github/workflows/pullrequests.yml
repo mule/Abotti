@@ -31,7 +31,7 @@ jobs:
       
       # Configure your tests to use Azurite
       - name: Run Tests
-        run: dotnet test --configuration Debug --filter Traits!~PlayWrightTests
+        run: dotnet test --configuration Debug --filter Traits!~PlaywrightTest
       
       # Tear down Azurite container after tests are done (to free up resources)
       - name: Tear down Azurite
