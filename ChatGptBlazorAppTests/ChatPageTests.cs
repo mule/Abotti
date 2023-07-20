@@ -1,4 +1,3 @@
-using System.ComponentModel;
 using Microsoft.AspNetCore.Hosting;
 
 namespace ChatGptBlazorAppTests;
@@ -14,8 +13,8 @@ public class ChatPageTests
     }
 
 
-    [Category("PlaywrightTest")]
     [Fact]
+    [Trait("Category", "PlaywrightTest")]
     public async Task ShouldRenderPageCorrectly()
     {
         var url = "http://127.0.0.1:5000";
