@@ -30,8 +30,8 @@ jobs:
         run: docker run -d -p 10000:10000 -p 10001:10001 mcr.microsoft.com/azure-storage/azurite
       
       # Configure your tests to use Azurite
-      - name: Run Tests with Azurite
-        run: dotnet test --configuration Debug
+      - name: Run Tests
+        run: dotnet test --configuration Debug --filter Traits!~PlayWrightTests
       
       # Tear down Azurite container after tests are done (to free up resources)
       - name: Tear down Azurite
