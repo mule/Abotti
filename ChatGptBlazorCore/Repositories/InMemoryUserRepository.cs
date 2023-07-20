@@ -22,7 +22,6 @@ public class InMemoryUserRepository : RepositoryBase<Guid, User>, IUserRepositor
         Add(rootUser);
     }
 
-
     public async Task<(bool Ok, User? Result, string[] Errors)> GetByNameAsync(string userName)
     {
         var result = await Task.FromResult(GetByName(userName));

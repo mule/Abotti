@@ -4,31 +4,8 @@ using System.Text.Json;
 using ChatGptBlazorCore.Models;
 using DataAccessLayer.Repositories;
 using FluentAssertions;
-using Serilog;
-using Serilog.Events;
 
 namespace DataAccessLayerTests;
-
-public class TestLogger : ILogger
-{
-    public TestLogger()
-    {
-        LogEvents = new List<LogEvent>();
-    }
-
-    public List<LogEvent> LogEvents { get; set; }
-
-    public void Write(LogEvent logEvent)
-    {
-        LogEvents.Add(logEvent);
-    }
-}
-
-public class TestModel : IModel<string>
-{
-    public string Value { get; set; }
-    public string Id { get; set; }
-}
 
 public class RepositoryFileDbTests
 {

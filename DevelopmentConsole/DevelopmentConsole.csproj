@@ -9,6 +9,8 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.2.2"/>
+        <PackageReference Include="Azure.Identity" Version="1.9.0"/>
         <PackageReference Include="Microsoft.Extensions.Configuration" Version="8.0.0-preview.2.23128.3"/>
         <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="7.0.0"/>
         <PackageReference Include="Serilog" Version="3.0.1"/>
