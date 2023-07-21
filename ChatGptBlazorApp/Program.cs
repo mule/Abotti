@@ -13,7 +13,6 @@ using OpenAI.Interfaces;
 using OpenAI.ObjectModels;
 using Serilog;
 using ServiceAccessLayer.AiServices;
-using Spectre.Console;
 
 // Configure Serilog logger
 Log.Logger = new LoggerConfiguration()
@@ -26,8 +25,13 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     var builder = WebApplication.CreateBuilder(args);
-    builder.Configuration.AddUserSecrets<Program>();
+
+
     builder.Configuration.AddEnvironmentVariables();
+
+    Log.Information("Environment is {Environment}", builder.Environment.EnvironmentName);
+
+    builder.Configuration.AddUserSecrets<Program>();
 
 
     var azureKeyVaultUriStr = builder.Configuration.GetValue<string>("AzureKeyVaultUri");
@@ -35,19 +39,25 @@ try
     {
         Log.Information("Adding Azure Key Vault to configuration");
         var azureKeyVaultUri = new Uri(azureKeyVaultUriStr);
+
+
+        // var cred = new ManagedIdentityCredential("05e4ad6d-45ef-49a8-b9fc-053a1edf691a");
+        // Log.Debug("Azure Key Vault credential: {AzureKeyVaultCredential}", cred.ToJson());
         builder.Configuration.AddAzureKeyVault(azureKeyVaultUri, new DefaultAzureCredential());
     }
 
-    AnsiConsole.WriteLine(builder.Configuration.GetDebugView());
+    //AnsiConsole.WriteLine(builder.Configuration.GetDebugView());
 
-    var openAiKey = builder.Configuration["openai-api-key"] ?? builder.Configuration["OpenAIServiceOptions:ApiKey"];
-    var blobStorageConnectionString = builder.Configuration["BlobStorage:ConnectionString"];
+    var openAiKey = builder.Configuration["OpenAIServiceOptions:ApiKey"];
+    var blobStorageConnectionString = builder.Configuration.GetConnectionString("BlobStorage");
+
     var blobStorageContainerName = builder.Configuration["BlobStorage:ContainerName"];
 
     var connectionString = builder.Configuration.GetConnectionString("ChatGptBlazorAppContextConnection") ??
                            throw new InvalidOperationException(
                                "Connection string 'ChatGptBlazorAppContextConnection' not found.");
     var config = builder.Configuration;
+
 
     var adminUserIdStr = builder.Configuration.GetValue<string>("AdminUser:Id");
     var adminUserId = Guid.Parse(adminUserIdStr);
@@ -142,7 +152,7 @@ try
 }
 catch (Exception e)
 {
-    Log.Fatal("Application start-up failed", e);
+    Log.Fatal(e, "Application start-up failed {EMessage} ", e.Message);
 }
 finally
 {

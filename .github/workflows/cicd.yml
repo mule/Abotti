@@ -1,0 +1,60 @@
+name: Build on PR Branches
+
+on:
+  push:
+    branches:
+      - 'pr-*'
+      - 'main'
+    pull_request:
+      branches:
+        - 'main'
+env:
+  AZURE_WEBAPP_NAME: 'Abotti'
+  AZURE_WEBAPP_PACKAGE_PATH: '.'
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '7.0.x'  # Replace with your desired .NET version
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore --configuration Debug
+          
+      # Set up Azurite using Docker
+      - name: Set up Azurite
+        run: docker run -d -p 10000:10000 -p 10001:10001 mcr.microsoft.com/azure-storage/azurite
+      
+      # Run tests
+      - name: Run Tests
+        run: dotnet test --configuration Debug --filter Category!~PlaywrightTest
+      
+      # Tear down Azurite container after tests are done (to free up resources)
+      - name: Tear down Azurite
+        run: docker stop $(docker ps -aqf "ancestor=mcr.microsoft.com/azure-storage/azurite") && docker rm $(docker ps -aqf "ancestor=mcr.microsoft.com/azure-storage/azurite")
+      
+      # Publish to a temporary folder
+      - name: Publish
+        if: github.ref == 'refs/heads/main'
+        run: dotnet publish ./ChatGptBlazorApp --configuration Release --output ${{env.AZURE_WEBAPP_PACKAGE_PATH}}/dist
+        
+      
+      # Deploy to Azure Web App
+      - name: Deploy to azure
+        if: github.ref == 'refs/heads/main'
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AzureAppService_PublishProfile_107CDD4B25B14E458AD5DF3CB34494EA}}
+          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/dist
