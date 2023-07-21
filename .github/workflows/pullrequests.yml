@@ -5,8 +5,8 @@ on:
     branches:
       - 'pr-*'
 env:
-  AZURE_WEBAPP_NAME: Abotti
-  AZURE_WEBAPP_PACKAGE_PATH: './ChatGptBlazorApp
+  AZURE_WEBAPP_NAME: 'Abotti'
+  AZURE_WEBAPP_PACKAGE_PATH: './ChatGptBlazorApp'
 
 jobs:
   build:
