@@ -12,7 +12,9 @@ public class ChatPageTests
         this.playwrightFixture = playwrightFixture;
     }
 
+
     [Fact]
+    [Trait("Category", "PlaywrightTest")]
     public async Task ShouldRenderPageCorrectly()
     {
         var url = "http://127.0.0.1:5000";
