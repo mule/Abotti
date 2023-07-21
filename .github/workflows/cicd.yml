@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - 'pr-*'
+      - 'main'
+    pull_request:
+      branches:
+        - 'main'
 env:
   AZURE_WEBAPP_NAME: 'Abotti'
   AZURE_WEBAPP_PACKAGE_PATH: '.'
@@ -42,10 +46,13 @@ jobs:
       
       # Publish to a temporary folder
       - name: Publish
+        if: github.ref == 'refs/heads/main'
         run: dotnet publish ./ChatGptBlazorApp --configuration Release --output ${{env.AZURE_WEBAPP_PACKAGE_PATH}}/dist
+        
       
       # Deploy to Azure Web App
       - name: Deploy to azure
+        if: github.ref == 'refs/heads/main'
         uses: azure/webapps-deploy@v2
         with:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
