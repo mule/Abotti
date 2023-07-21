@@ -37,3 +37,9 @@ jobs:
       - name: Tear down Azurite
         run: docker stop $(docker ps -aqf "ancestor=mcr.microsoft.com/azure-storage/azurite") && docker rm $(docker ps -aqf "ancestor=mcr.microsoft.com/azure-storage/azurite")
           
+      # Deploy to Azure Web App
+      - name: Deploy to azure
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: 'Abotti'
+          publish-profile: ${{ secrets.AzureAppService_PublishProfile_107CDD4B25B14E458AD5DF3CB34494EA}}
