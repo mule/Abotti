@@ -53,7 +53,7 @@
         <form onsubmit="@Send">
             <div class="mb-3">
                 <label for="chatInput" class="form-label">User prompt:</label>
-                <textarea class="form-control"  id="chatInput" @bind="_currentPrompt"></textarea>
+                <textarea class="form-control"  id="chatInput" placeholder="write a message to your assistant" @bind="_currentPrompt"></textarea>
             </div>
 
             <div class="col-md-2">
@@ -165,7 +165,13 @@
 
     private async Task Send()
     {
+        if (_currentPrompt == string.Empty)
+        {
+            return;
+        }
+
         _waitingForResponse = true;
+
 
         var replies = _currentSession.Entries.Select(e => (e.Role, e.Content)).ToList();
         var result = await OpenAiClient.GetCompletionAsync(replies, _currentPrompt);
