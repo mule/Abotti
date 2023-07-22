@@ -18,7 +18,7 @@
 
 <div class="row">
     <div class="col-md-3">
-        <ChatSessionsList SessionTopics="@_sessionTopics"/>
+        <ChatSessionsList OnDeleteSession="DeleteSession" SessionTopics="@_sessionTopics"/>
     </div>
     <div class="col-md-9">
         <div class="row">
@@ -154,6 +154,17 @@
                 NavigationManager.NavigateTo($"/Chat/{_currentSession.Id}");
             }
         }
+        else
+        {
+            _currentSession = new ChatSession(Guid.NewGuid(), userQueryResult.Result.Id)
+            {
+                Entries = new List<ChatEntry>(),
+                Topic = "New topic"
+            };
+            ChatSessionRepository.Add(_currentSession);
+
+            NavigationManager.NavigateTo($"/Chat/{_currentSession.Id}");
+        }
 
 
         var topics = await GetSessionTopics(_currentSession.UserId);
@@ -255,6 +266,30 @@
             "assistant" => "text-success",
             _ => "dark"
             };
+    }
+
+    private async Task DeleteSession(Guid sessionId)
+    {
+        var deleteOpResult = await ChatSessionRepository.DeleteAsync(sessionId);
+
+        if (!deleteOpResult.Ok)
+        {
+            foreach (var error in deleteOpResult.Errors)
+            {
+                ToastService.ShowError(error);
+            }
+            return;
+        }
+
+        if (_currentSession.Id == sessionId)
+        {
+            NavigationManager.NavigateTo("/Chat");
+        }
+        else
+        {
+            var updatedTopics = await GetSessionTopics(_currentSession.UserId);
+            _sessionTopics = updatedTopics;
+        }
     }
 
 

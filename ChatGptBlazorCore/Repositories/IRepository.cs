@@ -11,7 +11,7 @@ public interface IRepository<in TK, T> where T : IModel<TK>
 
     //Async methods
     Task<(bool Ok, string[] Errors)> AddAsync(T item);
-    Task<(bool Ok, string[] Errors)> DeleteAsync(T item);
+    Task<(bool Ok, string[] Errors)> DeleteAsync(TK key);
     Task<(bool Ok, string[] Errors)> UpdateAsync(T item);
     Task<(bool Ok, string[] Errors)> DeleteAllAsync();
     Task<(bool Ok, T[] Result, string[] Errors)> GetAllAsync();

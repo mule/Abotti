@@ -1,9 +1,11 @@
 @using ChatGptBlazorCore.QueryResults
 @using ChatGptBlazorCore.Models
+@using Blazored.Toast.Services
 @using System.Globalization
 @inject IUserRepository UserRepository
 @inject IChatSessionRepository ChatSessionRepository
 @inject NavigationManager NavigationManager
+@inject IToastService ToastService
 
 <div class="sidebar">
     <div class="nav-scrollable">
@@ -20,10 +22,17 @@
                 <h6 class="nav-header">@topicGroupDateStr</h6>
                 foreach (var sessionTopic in topicGroup)
                 {
-                    <div class="nav-item px-3">
+                    <div class="nav-item px-3 d-flex align-items-center">
                         <NavLink class="nav-link" href="@GetChatSessionLink(sessionTopic.Id)">
                             <span class="" aria-hidden="true">@sessionTopic.Topic</span>
                         </NavLink>
+                        <button class="btn btn-sm btn-danger ml-auto"
+                                data-toggle="tooltip"
+                                data-placement="right"
+                                title="Delete chat session"
+                                @onclick="async () => await OnDeleteSession.InvokeAsync(sessionTopic.Id)">
+                            <span class="oi oi-trash"></span>
+                        </button>
                     </div>
                 }
             }
@@ -35,6 +44,10 @@
 
     [Parameter]
     public TopicQueryResult[] SessionTopics { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid> OnDeleteSession { get; set; }
+
 
     private void NavigateToNewChat()
     {
@@ -54,5 +67,7 @@
     {
         return $"{sessionTopic.Topic}";
     }
+
+
 
 }

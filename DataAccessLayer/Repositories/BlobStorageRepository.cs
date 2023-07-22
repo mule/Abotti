@@ -171,6 +171,33 @@ public class BlobStorageRepository<TK, T> : RepositoryBase<TK, T>, IInitializeab
         return persistOpResult;
     }
 
+    public override (bool Ok, string[] Errors) Delete(TK key)
+    {
+        var deleteOpResult = base.Delete(key);
+
+        if (!deleteOpResult.Ok)
+        {
+            _logger.Error("Failed to delete item from {DbFile}", _blobClient.Name);
+            return deleteOpResult;
+        }
+
+        var persistOpResult = PersistData(items);
+        return persistOpResult;
+    }
+
+    public override async Task<(bool Ok, string[] Errors)> DeleteAsync(TK key)
+    {
+        var deleteOpResult = await base.DeleteAsync(key);
+        if (!deleteOpResult.Ok)
+        {
+            _logger.Error("Failed to delete item from {DbFile}", _blobClient.Name);
+            return deleteOpResult;
+        }
+
+        var persistOpResult = await PersistDataAsync(items);
+        return persistOpResult;
+    }
+
     protected virtual (bool Ok, string[] Errors) PersistData(IDictionary<TK, T> data)
     {
         try
