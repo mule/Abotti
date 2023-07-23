@@ -59,9 +59,9 @@ public abstract class RepositoryBase<TK, T> : IRepository<TK, T> where T : IMode
         return result;
     }
 
-    public virtual async Task<(bool Ok, string[] Errors)> DeleteAsync(T item)
+    public virtual async Task<(bool Ok, string[] Errors)> DeleteAsync(TK key)
     {
-        var result = await Task.FromResult(Delete(item.Id));
+        var result = await Task.FromResult(Delete(key));
         return result;
     }
 

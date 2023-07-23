@@ -118,6 +118,26 @@ public class RepositoryFileDb<TK, T> : RepositoryBase<TK, T>, IInitializeableRep
         return result;
     }
 
+    public override (bool Ok, string[] Errors) Delete(TK key)
+    {
+        var deleteOpResult = base.Delete(key);
+        if (!deleteOpResult.Ok)
+            return deleteOpResult;
+
+        var fileOperationResult = PersistDataToFile(items);
+        return fileOperationResult;
+    }
+
+    public override async Task<(bool Ok, string[] Errors)> DeleteAsync(TK key)
+    {
+        var deleteOpResult = await base.DeleteAsync(key);
+        if (!deleteOpResult.Ok)
+            return deleteOpResult;
+
+        var fileOperationResult = await PersistDataToFileAsync(items);
+        return fileOperationResult;
+    }
+
 
     protected virtual async Task<IDictionary<TK, T>?> LoadDbDataFromFileAsync(IFileSystem fileSystem, string dbFilePath)
     {
@@ -133,6 +153,22 @@ public class RepositoryFileDb<TK, T> : RepositoryBase<TK, T>, IInitializeableRep
         var data = JsonSerializer.Deserialize<Dictionary<TK, T>>(dbDataText);
         return data;
     }
+
+    protected virtual (bool Ok, string[] Errors) PersistDataToFile(IDictionary<TK, T> data)
+    {
+        try
+        {
+            _fileSystem.File.WriteAllText(_dbFilePath, JsonSerializer.Serialize(data));
+            return (true, Array.Empty<string>());
+        }
+        catch (Exception e)
+        {
+            var errorMessage = $"Failed to persist data to db file {_dbFilePath} because {e.Message}";
+            _logger.Error(e, errorMessage, _dbFilePath);
+            return (false, new[] { errorMessage });
+        }
+    }
+
 
     protected virtual async Task<(bool Ok, string[] Errors)> PersistDataToFileAsync(IDictionary<TK, T> data)
     {
