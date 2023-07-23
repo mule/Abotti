@@ -22,12 +22,15 @@
     </div>
     <div class="col-md-9">
         <div class="row">
-            <h3>@_currentSession.Topic</h3>
+            <h3>@_currentSession?.Topic</h3>
             <div class="d-flex">
                 @{
-                    foreach (var tag in _currentSession.Tags)
+                    if (_currentSession != null)
                     {
-                        <span class="badge rounded-pill bg-primary mx-2">@tag</span>
+                        foreach (var tag in _currentSession.Tags)
+                        {
+                            <span class="badge rounded-pill bg-primary mx-2">@tag</span>
+                        }
                     }
                 }
             </div>
@@ -36,15 +39,20 @@
         <div class="row">
             <div id="chatOutput" class="overflow-y">
                 <ul>
-                    @foreach (var reply in _currentSession.Entries)
-                    {
-                        var contentHtml = Markdown.ToHtml(reply.Content);
-                        var roleClass = GetRoleColor(reply.Role);
+                    @{
+                        if (_currentSession != null)
+                        {
+                            foreach (var reply in _currentSession.Entries)
+                            {
+                                var contentHtml = Markdown.ToHtml(reply.Content);
+                                var roleClass = GetRoleColor(reply.Role);
 
-                        <li>
-                            <h5 class="@roleClass">@reply.Role:</h5>
-                            <div>@((MarkupString)contentHtml)</div>
-                        </li>
+                                <li>
+                                    <h5 class="@roleClass">@reply.Role:</h5>
+                                    <div>@((MarkupString)contentHtml)</div>
+                                </li>
+                            }
+                        }
                     }
                 </ul>
             </div>
@@ -74,13 +82,13 @@
 
     bool _waitingForResponse;
     string _currentPrompt = "";
-    ChatSession _currentSession;
+    ChatSession? _currentSession;
 
     TopicQueryResult[] _sessionTopics = Array.Empty<TopicQueryResult>();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        if (_currentSession.Entries.Count > 0)
+        if (_currentSession != null && _currentSession.Entries.Count > 0)
         {
             await JS.InvokeVoidAsync("scrollToBottom");
         }
@@ -113,17 +121,7 @@
         }
         else
         {
-            _currentSession = new ChatSession(Guid.NewGuid(), queryResult.Result.Id)
-            {
-                Entries = new List<ChatEntry>(),
-                Topic = "New topic"
-            };
-
-
-            await ChatSessionRepository.AddAsync(_currentSession);
-
-
-            NavigationManager.NavigateTo($"/Chat/{_currentSession.Id}");
+            SessionId = Guid.NewGuid();
         }
     }
 
@@ -144,30 +142,19 @@
             }
             else
             {
-                _currentSession = new ChatSession(Guid.NewGuid(), userQueryResult.Result.Id)
-                {
-                    Entries = new List<ChatEntry>(),
-                    Topic = "New topic"
-                };
-                ChatSessionRepository.Add(_currentSession);
-
-                NavigationManager.NavigateTo($"/Chat/{_currentSession.Id}");
+                await StartNewSession(Guid.NewGuid(), userQueryResult.Result.Id);
             }
         }
         else
         {
-            _currentSession = new ChatSession(Guid.NewGuid(), userQueryResult.Result.Id)
-            {
-                Entries = new List<ChatEntry>(),
-                Topic = "New topic"
-            };
-            ChatSessionRepository.Add(_currentSession);
-
-            NavigationManager.NavigateTo($"/Chat/{_currentSession.Id}");
+            await StartNewSession(Guid.NewGuid(), userQueryResult.Result.Id);
         }
 
-
-        var topics = await GetSessionTopics(_currentSession.UserId);
+        var topics = Array.Empty<TopicQueryResult>();
+        if (_currentSession != null)
+        {
+            topics = await GetSessionTopics(_currentSession.UserId);
+        }
         _sessionTopics = topics.OrderByDescending(topic => topic.Created).ToArray();
 
 
@@ -291,6 +278,35 @@
             _sessionTopics = updatedTopics;
         }
     }
+
+
+    private async Task StartNewSession(Guid sessionId, Guid userId)
+    {
+        var newSession = new ChatSession
+        {
+            Id = sessionId,
+            UserId = userId,
+            Entries = new List<ChatEntry>(),
+            Created = DateTime.Now,
+            Topic = "New topic",
+            Tags = new List<string>()
+        };
+
+        _currentSession = newSession;
+        var addOpResult = await ChatSessionRepository.AddAsync(_currentSession);
+
+        if (!addOpResult.Ok)
+        {
+            foreach (var error in addOpResult.Errors)
+            {
+                ToastService.ShowError(error);
+            }
+        }
+
+        NavigationManager.NavigateTo($"/Chat/{sessionId}");
+    }
+
+
 
 
 }
