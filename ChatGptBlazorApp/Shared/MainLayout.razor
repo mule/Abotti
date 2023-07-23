@@ -13,21 +13,18 @@
 <ErrorBoundary>
     <CascadingAuthenticationState>
         <div class="page">
-            @* <div class="sidebar"> *@
-            @*     <CascadingValue Value="@ChatSessionTopics"> *@
-            @*         <NavMenu OnNewTopic="HandleNewTopicRequest"/> *@
-            @*     </CascadingValue> *@
-            @* </div> *@
             <main>
-                <div class="top-row px-4 d-flex justify-content-end align-items-center w-100">
+                <div class="top-row navbar px-4 d-flex justify-content-between   w-100">
+                    <div>
+                        <a class="navbar-brand" href="">Abotti - your personal bot assistant</a>
+                    </div>
                     <div class="d-flex align-items-center">
-                        <a class="mx-3" href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
                         <AuthorizeView>
                             <Authorized>
-                                @UserVerified.ToString()
                                 <p class="mx-3 mb-0">
                                     Hello, @context.User.Identity.Name!
                                     <span class="badge bg-secondary">@(UserVerified ? "Verified" : "Not verified")</span>
+                                    <a href="MicrosoftIdentity/Account/SignOut" class="btn btn-primary">Log out</a>
                                 </p>
                             </Authorized>
                             <NotAuthorized>
@@ -61,6 +58,10 @@
             ToastService.ShowError("Unable to get user info. Please try again later.");
         }
     }
+
+
+
+
 
 
 }

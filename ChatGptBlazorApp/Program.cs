@@ -40,13 +40,9 @@ try
         Log.Information("Adding Azure Key Vault to configuration");
         var azureKeyVaultUri = new Uri(azureKeyVaultUriStr);
 
-
-        // var cred = new ManagedIdentityCredential("05e4ad6d-45ef-49a8-b9fc-053a1edf691a");
-        // Log.Debug("Azure Key Vault credential: {AzureKeyVaultCredential}", cred.ToJson());
         builder.Configuration.AddAzureKeyVault(azureKeyVaultUri, new DefaultAzureCredential());
     }
 
-    //AnsiConsole.WriteLine(builder.Configuration.GetDebugView());
 
     var openAiKey = builder.Configuration["OpenAIServiceOptions:ApiKey"];
     var blobStorageConnectionString = builder.Configuration.GetConnectionString("BlobStorage");
@@ -67,12 +63,6 @@ try
     if (!Directory.Exists(dataFilesPath))
         Directory.CreateDirectory(dataFilesPath);
 
-    // var testChatRepo = new InMemoryChatSessionRepository();
-    // testChatRepo.Add(ChatSession.GenerateTestChatSession(adminUserId));
-    // testChatRepo.Add(ChatSession.GenerateTestChatSession(adminUserId));
-    // testChatRepo.Add(ChatSession.GenerateTestChatSession(adminUserId));
-
-
     builder.Host.UseSerilog();
     builder.Services.AddDbContext<ChatGptBlazorAppContext>(options => options.UseSqlServer(connectionString));
 
@@ -80,26 +70,20 @@ try
         .AddEntityFrameworkStores<ChatGptBlazorAppContext>();
 
 
-    builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme);
-    builder.Services.AddMicrosoftIdentityWebAppAuthentication(builder.Configuration);
-    builder.Services.AddMicrosoftIdentityConsentHandler();
+    builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
+        .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
 
 
 // Add services to the container.
     builder.Services.AddRazorPages();
-    builder.Services.AddServerSideBlazor();
+    builder.Services.AddServerSideBlazor()
+        .AddMicrosoftIdentityConsentHandler();
     builder.Services.AddOpenAIService(options => { options.ApiKey = openAiKey; });
     builder.Services.AddTransient<IOpenAiClient>(provider => new OpenAiClient(
         provider.GetService<IOpenAIService>(),
         provider.GetService<ILogger<OpenAiClient>>(), Models.Gpt_3_5_Turbo));
     builder.Services.AddBlazoredToast();
-    builder.Services.AddControllersWithViews(options =>
-    {
-        // var policy = new AuthorizationPolicyBuilder()
-        //     .RequireAuthenticatedUser()
-        //     .Build();
-        // options.Filters.Add(new AuthorizeFilter(policy));
-    }).AddMicrosoftIdentityUI();
+    builder.Services.AddControllersWithViews(options => { }).AddMicrosoftIdentityUI();
 
     builder.Services.AddAuthorization(options =>
     {
@@ -144,7 +128,7 @@ try
 
     app.UseRouting();
     app.UseHttpsRedirection();
-
+    app.MapControllers();
     app.MapBlazorHub();
     app.MapFallbackToPage("/_Host");
 

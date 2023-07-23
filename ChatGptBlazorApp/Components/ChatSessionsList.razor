@@ -1,9 +1,11 @@
 @using ChatGptBlazorCore.QueryResults
 @using ChatGptBlazorCore.Models
+@using Blazored.Toast.Services
 @using System.Globalization
 @inject IUserRepository UserRepository
 @inject IChatSessionRepository ChatSessionRepository
 @inject NavigationManager NavigationManager
+@inject IToastService ToastService
 
 <div class="sidebar">
     <div class="nav-scrollable">
@@ -13,17 +15,29 @@
         @{
             var topicsGroupedByDate = SessionTopics.GroupBy(x => x.Created.Date);
 
-
             foreach (var topicGroup in topicsGroupedByDate)
             {
                 var topicGroupDateStr = topicGroup.Key.ToString("dd-MM-yyyy", CultureInfo.CurrentCulture);
-                <h6 class="nav-header">@topicGroupDateStr</h6>
+                <div class="row">
+                    <h6 class="nav-header">@topicGroupDateStr</h6>
+                </div>
                 foreach (var sessionTopic in topicGroup)
                 {
-                    <div class="nav-item px-3">
-                        <NavLink class="nav-link" href="@GetChatSessionLink(sessionTopic.Id)">
-                            <span class="" aria-hidden="true">@sessionTopic.Topic</span>
-                        </NavLink>
+                    <div class="row">
+                        <div class="col-md-10">
+                            <a href="@GetChatSessionLink(sessionTopic.Id)">
+                                <span class="" aria-hidden="true">@sessionTopic.Topic</span>
+                            </a>
+                        </div>
+                        <div class="col-md-1">
+                            <button class="btn btn-sm btn-danger mb-1"
+                                    data-toggle="tooltip"
+                                    data-placement="right"
+                                    title="Delete chat session"
+                                    @onclick="async () => await OnDeleteSession.InvokeAsync(sessionTopic.Id)">
+                                <span class="oi oi-trash"></span>
+                            </button>
+                        </div>
                     </div>
                 }
             }
@@ -35,6 +49,10 @@
 
     [Parameter]
     public TopicQueryResult[] SessionTopics { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid> OnDeleteSession { get; set; }
+
 
     private void NavigateToNewChat()
     {
@@ -54,5 +72,7 @@
     {
         return $"{sessionTopic.Topic}";
     }
+
+
 
 }
