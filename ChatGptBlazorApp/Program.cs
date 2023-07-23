@@ -70,14 +70,14 @@ try
         .AddEntityFrameworkStores<ChatGptBlazorAppContext>();
 
 
-    builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme);
-    builder.Services.AddMicrosoftIdentityWebAppAuthentication(builder.Configuration);
-    builder.Services.AddMicrosoftIdentityConsentHandler();
+    builder.Services.AddAuthentication(OpenIdConnectDefaults.AuthenticationScheme)
+        .AddMicrosoftIdentityWebApp(builder.Configuration.GetSection("AzureAd"));
 
 
 // Add services to the container.
     builder.Services.AddRazorPages();
-    builder.Services.AddServerSideBlazor();
+    builder.Services.AddServerSideBlazor()
+        .AddMicrosoftIdentityConsentHandler();
     builder.Services.AddOpenAIService(options => { options.ApiKey = openAiKey; });
     builder.Services.AddTransient<IOpenAiClient>(provider => new OpenAiClient(
         provider.GetService<IOpenAIService>(),
@@ -128,7 +128,7 @@ try
 
     app.UseRouting();
     app.UseHttpsRedirection();
-
+    app.MapControllers();
     app.MapBlazorHub();
     app.MapFallbackToPage("/_Host");
 

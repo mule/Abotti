@@ -24,6 +24,7 @@
                                 <p class="mx-3 mb-0">
                                     Hello, @context.User.Identity.Name!
                                     <span class="badge bg-secondary">@(UserVerified ? "Verified" : "Not verified")</span>
+                                    <a href="MicrosoftIdentity/Account/SignOut" class="btn btn-primary">Log out</a>
                                 </p>
                             </Authorized>
                             <NotAuthorized>
@@ -57,6 +58,10 @@
             ToastService.ShowError("Unable to get user info. Please try again later.");
         }
     }
+
+
+
+
 
 
 }
