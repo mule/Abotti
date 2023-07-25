@@ -1,4 +1,3 @@
-using System.IO.Abstractions;
 using Azure.Identity;
 using Azure.Storage.Blobs;
 using Blazored.Toast;
@@ -103,15 +102,15 @@ try
 
     builder.Services.AddSingleton<IUserRepository, UserBlobStorageRepo>(ctx => userRepo);
 
-    // var chatSessionRepo =
-    //     new ChatSessionBlobStorageRepository(blobContainerClient.GetBlobClient("chatSessions.json"), Log.Logger);
-    // await chatSessionRepo.InitializeAsync();
-
-    var chatSessionRepo = new ChatSessionFileDb(new FileSystem(), Log.Logger, "./Data/chatsessionsdb.json");
+    var chatSessionRepo =
+        new ChatSessionBlobStorageRepository(blobContainerClient.GetBlobClient("chatSessions.json"), Log.Logger);
     await chatSessionRepo.InitializeAsync();
 
+    // var chatSessionRepo = new ChatSessionFileDb(new FileSystem(), Log.Logger, "./Data/chatsessionsdb.json");
+    // await chatSessionRepo.InitializeAsync();
 
-    builder.Services.AddSingleton<IChatSessionRepository, ChatSessionFileDb>(ctx => chatSessionRepo);
+
+    builder.Services.AddSingleton<IChatSessionRepository, ChatSessionBlobStorageRepository>(ctx => chatSessionRepo);
 
     var app = builder.Build();
 
