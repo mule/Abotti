@@ -1,10 +1,10 @@
 @page "/Chat"
 @page "/Chat/{SessionId:guid}"
-@using ChatGptBlazorCore.Models
-@using ChatGptBlazorCore.QueryResults
 @using Markdig
 @using Serilog
 @using ServiceAccessLayer.AiServices
+@using ChatGptBlazorCore.Models
+@using ChatGptBlazorCore.QueryResults
 @using Blazored.Toast.Services
 @using ChatGptBlazorApp.Components
 @inject IJSRuntime JS
@@ -38,14 +38,21 @@
         </div>
         <div class="row">
             <div id="chatOutput" class="overflow-y">
-                <ul>
+                <ul style="max-width: 100em">
                     @{
                         if (_currentSession != null)
                         {
                             foreach (var reply in _currentSession.Entries)
                             {
-                                var contentHtml = Markdown.ToHtml(reply.Content);
                                 var roleClass = GetRoleColor(reply.Role);
+
+                                var pipeline = new MarkdownPipelineBuilder()
+                                    .UseAdvancedExtensions()
+                                    .DisableHtml()
+                                    .UseBootstrap()
+                                    .Build();
+                                var contentHtml = Markdown.ToHtml(reply.Content, pipeline);
+
 
                                 <li>
                                     <h5 class="@roleClass">@reply.Role:</h5>

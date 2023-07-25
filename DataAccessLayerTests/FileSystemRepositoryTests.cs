@@ -7,7 +7,7 @@ using FluentAssertions;
 
 namespace DataAccessLayerTests;
 
-public class RepositoryFileDbTests
+public class FileSystemRepositoryTests
 {
     [Fact]
     public async Task Should_be_able_to_initialize_an_empty_file_db()
@@ -16,7 +16,7 @@ public class RepositoryFileDbTests
         var testLogger = new TestLogger();
 
         IFileSystem fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>());
-        var targetRepo = new RepositoryFileDb<Guid, User>(fileSystem, testLogger, mockDbFilePath);
+        var targetRepo = new FileSystemRepository<Guid, User>(fileSystem, testLogger, mockDbFilePath);
 
         await targetRepo.InitializeAsync();
 
@@ -41,7 +41,7 @@ public class RepositoryFileDbTests
         var testLogger = new TestLogger();
 
         IFileSystem fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>());
-        var targetRepo = new RepositoryFileDb<string, TestModel>(fileSystem, testLogger, mockDbFilePath);
+        var targetRepo = new FileSystemRepository<string, TestModel>(fileSystem, testLogger, mockDbFilePath);
         await targetRepo.InitializeAsync(testData);
 
         targetRepo.IsInitialized.Should().BeTrue();
@@ -65,7 +65,7 @@ public class RepositoryFileDbTests
         var testLogger = new TestLogger();
 
         IFileSystem fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>());
-        var targetRepo = new RepositoryFileDb<string, TestModel>(fileSystem, testLogger, mockDbFilePath);
+        var targetRepo = new FileSystemRepository<string, TestModel>(fileSystem, testLogger, mockDbFilePath);
         await targetRepo.InitializeAsync(testData);
 
         targetRepo.IsInitialized.Should().BeTrue();
@@ -105,7 +105,7 @@ public class RepositoryFileDbTests
         var testLogger = new TestLogger();
 
         IFileSystem fileSystem = new MockFileSystem(new Dictionary<string, MockFileData>());
-        var targetRepo = new RepositoryFileDb<string, TestModel>(fileSystem, testLogger, mockDbFilePath);
+        var targetRepo = new FileSystemRepository<string, TestModel>(fileSystem, testLogger, mockDbFilePath);
         await targetRepo.InitializeAsync(testData);
 
         targetRepo.IsInitialized.Should().BeTrue();
