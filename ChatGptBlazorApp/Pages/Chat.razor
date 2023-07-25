@@ -37,13 +37,15 @@
 
         </div>
         <div class="row">
-            <div id="chatOutput" class="overflow-y col-auto">
-                <ul >
+            <div id="chatOutput" class="overflow-y">
+                <ul style="max-width: 100em">
                     @{
                         if (_currentSession != null)
                         {
                             foreach (var reply in _currentSession.Entries)
                             {
+                                var roleClass = GetRoleColor(reply.Role);
+
                                 var pipeline = new MarkdownPipelineBuilder()
                                     .UseAdvancedExtensions()
                                     .DisableHtml()
@@ -51,7 +53,6 @@
                                     .Build();
                                 var contentHtml = Markdown.ToHtml(reply.Content, pipeline);
 
-                                var roleClass = GetRoleColor(reply.Role);
 
                                 <li>
                                     <h5 class="@roleClass">@reply.Role:</h5>
