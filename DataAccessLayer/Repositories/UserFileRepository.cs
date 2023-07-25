@@ -4,9 +4,10 @@ using Serilog;
 
 namespace DataAccessLayer.Repositories;
 
-public class UserFileDb : RepositoryFileDb<Guid, User>, IUserRepository
+public class UserFileRepository : FileSystemRepository<Guid, User>, IUserRepository
 {
-    public UserFileDb(IFileSystem fileSystem, ILogger logger, string dbFilePath) : base(fileSystem, logger, dbFilePath)
+    public UserFileRepository(IFileSystem fileSystem, ILogger logger, string dbFilePath) : base(fileSystem, logger,
+        dbFilePath)
     {
     }
 

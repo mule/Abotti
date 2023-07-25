@@ -5,9 +5,10 @@ using Serilog;
 
 namespace DataAccessLayer.Repositories;
 
-public class ChatSessionFileDb : RepositoryFileDb<Guid, ChatSession>, IChatSessionRepository
+public class ChatSessionFileRepository : FileSystemRepository<Guid, ChatSession>, IChatSessionRepository
 {
-    public ChatSessionFileDb(IFileSystem fileSystem, ILogger logger, string dbFilePath) : base(fileSystem, logger,
+    public ChatSessionFileRepository(IFileSystem fileSystem, ILogger logger, string dbFilePath) : base(fileSystem,
+        logger,
         dbFilePath)
     {
     }

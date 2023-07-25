@@ -106,6 +106,9 @@ try
         new ChatSessionBlobStorageRepository(blobContainerClient.GetBlobClient("chatSessions.json"), Log.Logger);
     await chatSessionRepo.InitializeAsync();
 
+    // var chatSessionRepo = new ChatSessionFileDb(new FileSystem(), Log.Logger, "./Data/chatsessionsdb.json");
+    // await chatSessionRepo.InitializeAsync();
+
 
     builder.Services.AddSingleton<IChatSessionRepository, ChatSessionBlobStorageRepository>(ctx => chatSessionRepo);
 

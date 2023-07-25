@@ -5,14 +5,14 @@ using Serilog;
 
 namespace DataAccessLayer.Repositories;
 
-public class RepositoryFileDb<TK, T> : RepositoryBase<TK, T>, IInitializeableRepository<TK, T>
+public class FileSystemRepository<TK, T> : RepositoryBase<TK, T>, IInitializeableRepository<TK, T>
     where T : IModel<TK> where TK : notnull
 {
     private readonly string _dbFilePath;
     private readonly IFileSystem _fileSystem;
     private readonly ILogger _logger;
 
-    public RepositoryFileDb(IFileSystem fileSystem, ILogger logger, string dbFilePath)
+    public FileSystemRepository(IFileSystem fileSystem, ILogger logger, string dbFilePath)
     {
         _fileSystem = fileSystem;
         _dbFilePath = dbFilePath;
