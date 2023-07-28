@@ -75,6 +75,12 @@ try
 
 
 // Add services to the container.
+
+    ;
+
+    builder.Services.AddLocalization();
+
+
     builder.Services.AddRazorPages();
     builder.Services.AddServerSideBlazor()
         .AddMicrosoftIdentityConsentHandler();
@@ -126,9 +132,17 @@ try
         app.UseHsts();
     }
 
+    var supportedCultures = new[] { "en-US", "fi-FI" };
+    var localizationOptions = new RequestLocalizationOptions()
+        .SetDefaultCulture(supportedCultures[0])
+        .AddSupportedCultures(supportedCultures)
+        .AddSupportedUICultures(supportedCultures);
 
+    localizationOptions.FallBackToParentCultures = true;
+
+
+    app.UseRequestLocalization(localizationOptions);
     app.UseStaticFiles();
-
     app.UseRouting();
     app.UseHttpsRedirection();
     app.MapControllers();

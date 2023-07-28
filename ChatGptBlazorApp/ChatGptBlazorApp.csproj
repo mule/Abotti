@@ -38,4 +38,82 @@
         <PackageReference Include="System.IO.Abstractions" Version="19.2.29"/>
     </ItemGroup>
 
+    <ItemGroup>
+        <EmbeddedResource Update="Resources\Resource.fi-Fi.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>Resource.fi-Fi.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Resources\Resources.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Shared\MainLayout.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>MainLayout.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Resources\en\Resource.en-US.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>Resource.en-US.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Shared\MainLayout.fi.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>MainLayout.fi.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Pages\Chat.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>Chat.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Pages\Chat.fi.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>Chat.fi.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Components\ChatSessionsList.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>ChatSessionsList.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Components\ChatSessionsList.fi.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>ChatSessionsList.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Pages\UserProfile.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>UserProfile.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Pages\UserProfile.fi.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>UserProfile.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Components\CultureSelector.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>CultureSelector.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="Components\CultureSelector.fi.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>CultureSelector.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Compile Update="Resources\Resource.fi-Fi.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>Resource.fi-Fi.resx</DependentUpon>
+        </Compile>
+        <Compile Update="Resources\Resources.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>Resources.resx</DependentUpon>
+        </Compile>
+        <Compile Update="Shared\MainLayout.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>MainLayout.resx</DependentUpon>
+        </Compile>
+        <Compile Update="Resources\en\Resource.en-US.Designer.cs">
+            <DesignTime>True</DesignTime>
+            <AutoGen>True</AutoGen>
+            <DependentUpon>Resource.en-US.resx</DependentUpon>
+        </Compile>
+    </ItemGroup>
+
 </Project>

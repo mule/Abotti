@@ -1,7 +1,17 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.Localization
+@using System.Globalization
 @using Microsoft.AspNetCore.Components.Web
 @namespace ChatGptBlazorApp.Pages
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@{
+    HttpContext.Response.Cookies.Append(
+        CookieRequestCultureProvider.DefaultCookieName,
+        CookieRequestCultureProvider.MakeCookieValue(
+            new RequestCulture(
+                CultureInfo.CurrentCulture,
+                CultureInfo.CurrentUICulture)));
+}
 
 <!DOCTYPE html>
 <html lang="en">

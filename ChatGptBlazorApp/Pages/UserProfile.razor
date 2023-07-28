@@ -1,0 +1,59 @@
+@page "/userprofile/{UserId:guid}"
+@using ChatGptBlazorCore.Models
+@using Blazored.Toast.Services
+@using ChatGptBlazorApp.Components
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IUserRepository UserRepository
+@inject IToastService ToastService
+@inject IStringLocalizer<UserProfile> Loc
+
+
+<AuthorizeView>
+
+    <Authorized>
+        @if (IsCurrentUsersProfile)
+        {
+            <h3>@Loc["UserProfileHeading"]</h3>
+
+            <CultureSelector Id="langSelector"/>
+        }
+        else
+        {
+            <h3 class="alert">@Loc["WrongProfile"]</h3>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <h3 class="alert">@Loc["NotAuthorized"]</h3>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+
+    [Parameter]
+    public Guid UserId { get; set; }
+
+    public bool IsCurrentUsersProfile { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity.IsAuthenticated)
+        {
+            var userName = user.Identity.Name;
+
+            var userQuery = await UserRepository.GetByNameAsync(userName);
+            if (!userQuery.Ok)
+            {
+                foreach (var error in userQuery.Errors)
+                {
+                    ToastService.ShowError(error);
+                }
+            }
+
+            var currentUser = userQuery.Result;
+            IsCurrentUsersProfile = currentUser.Id == UserId;
+        }
+    }
+
+}
