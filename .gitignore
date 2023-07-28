@@ -103,4 +103,7 @@ yarn-error.log*
 *.userrules
 
 # Build results
-./dist
+dist
+
+#Azurite files
+__azurite_db_*
