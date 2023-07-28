@@ -6,11 +6,12 @@
 @inject IChatSessionRepository ChatSessionRepository
 @inject NavigationManager NavigationManager
 @inject IToastService ToastService
+@inject IStringLocalizer<ChatSessionsList> Loc
 
 <div class="sidebar">
     <div class="nav-scrollable">
         <div class="nav-item mb-2">
-            <button class="btn btn-primary" @onclick="NavigateToNewChat">New chat</button>
+            <button class="btn btn-primary" @onclick="NavigateToNewChat">@Loc["NewChat"]</button>
         </div>
         @{
             var topicsGroupedByDate = SessionTopics.GroupBy(x => x.Created.Date);

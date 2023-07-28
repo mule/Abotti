@@ -3,6 +3,7 @@
 @inject IChatSessionRepository ChatSessionRepository
 @inject NavigationManager NavigationManager
 @inject IToastService ToastService
+@inject IStringLocalizer<MainLayout> Loc
 @using ChatGptBlazorCore.Models
 @using Blazored.Toast.Services
 @inherits LayoutComponentBase
@@ -14,25 +15,24 @@
     <CascadingAuthenticationState>
         <div class="page">
             <main>
-                <div class="top-row navbar px-4 d-flex justify-content-between   w-100">
-                    <div>
-                        <a class="navbar-brand" href="">Abotti - your personal bot assistant</a>
-                    </div>
-                    <div class="d-flex align-items-center">
-                        <AuthorizeView>
-                            <Authorized>
-                                <p class="mx-3 mb-0">
-                                    Hello, @context.User.Identity.Name!
-                                    <span class="badge bg-secondary">@(UserVerified ? "Verified" : "Not verified")</span>
-                                    <a href="MicrosoftIdentity/Account/SignOut" class="btn btn-primary">Log out</a>
-                                </p>
-                            </Authorized>
-                            <NotAuthorized>
+                <nav class="top-row navbar  navbar-dark bg-dark">
+                    <a class="navbar-brand p-2" href="">Abotti - @Loc["SiteDescription"]</a>
+                    <AuthorizeView>
+                        <Authorized>
+                            <NavLink class="p-2" href="Chat">@Loc["ChatPageLink"]</NavLink>
+                            <div class="ms-auto p-2">
+                                <a class="nav-item" href="/UserProfile/@CurrentUser.Id.ToString()">@context.User.Identity.Name</a>
+                                <span class="badge bg-secondary">@(UserVerified ? Loc["Verfied"] : Loc["NotVerified"])</span>
+                                <a href="MicrosoftIdentity/Account/SignOut" class="btn-sm btn-primary">@Loc["LogOut"]</a>
+                            </div>
+                        </Authorized>
+                        <NotAuthorized>
+                            <div class="d-flex">
                                 <button class="btn btn-primary mx-3" href="MicrosoftIdentity/Account/SignIn">Login</button>
-                            </NotAuthorized>
-                        </AuthorizeView>
-                    </div>
-                </div>
+                            </div>
+                        </NotAuthorized>
+                    </AuthorizeView>
+                </nav>
                 <article class="content px-4">
                     @Body
                 </article>
@@ -44,7 +44,10 @@
 
 @code {
 
+
     public bool UserVerified { get; set; }
+    public User CurrentUser { get; set; }
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -52,7 +55,10 @@
         var queryResult = await UserRepository.GetByNameAsync(principal.User.Identity.Name);
 
         if (queryResult.Ok && queryResult.Result != null)
+        {
             UserVerified = true;
+            CurrentUser = queryResult.Result;
+        }
         else
         {
             ToastService.ShowError("Unable to get user info. Please try again later.");

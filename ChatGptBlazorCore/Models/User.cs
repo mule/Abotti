@@ -24,5 +24,7 @@ public class User : IModel<Guid>
 
     public string Role { get; set; }
 
+    public string PreferredLanguage { get; set; }
+
     public Guid Id { get; set; }
 }
