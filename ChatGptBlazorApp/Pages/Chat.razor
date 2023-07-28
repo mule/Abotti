@@ -14,6 +14,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IUserRepository UserRepository
 @inject IChatSessionRepository ChatSessionRepository
+@inject IStringLocalizer<Chat> Loc
 
 
 <div class="row">
@@ -67,12 +68,11 @@
 
         <form onsubmit="@Send">
             <div class="mb-3">
-                <label for="chatInput" class="form-label">User prompt:</label>
-                <textarea class="form-control"  id="chatInput" placeholder="write a message to your assistant" @bind="_currentPrompt"></textarea>
+                <textarea class="form-control"  id="chatInput" placeholder="@Loc["TextBoxPlaceHolder"]" @bind="_currentPrompt"></textarea>
             </div>
 
             <div class="col-md-2">
-                <button type="submit" class="form-control mt-2 btn btn-primary">Send</button>
+                <button type="submit" class="form-control mt-2 btn btn-primary">@Loc["Send"]</button>
             </div>
         </form>
         @if (_waitingForResponse)
@@ -295,7 +295,7 @@
             UserId = userId,
             Entries = new List<ChatEntry>(),
             Created = DateTime.Now,
-            Topic = "New topic",
+            Topic = Loc["NewTopic"],
             Tags = new List<string>()
         };
 
