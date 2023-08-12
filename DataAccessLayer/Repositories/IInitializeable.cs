@@ -1,6 +1,7 @@
-using ChatGptBlazorCore.Models;
+using Abotti.Core.Models;
+using Abotti.Core.Repositories;
 
-namespace DataAccessLayer.Repositories;
+namespace Abotti.DataAccessLayer.Repositories;
 
 public interface IInitializeableRepository<TK, T> : IRepository<TK, T>
     where T : IModel<TK>

@@ -2,6 +2,7 @@
 
 
 using System.Diagnostics;
+using Abotti.ServiceAccessLayer.AiServices;
 using Azure.Identity;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,7 +12,6 @@ using OpenAI.Interfaces;
 using OpenAI.ObjectModels;
 using Serilog;
 using Serilog.Debugging;
-using ServiceAccessLayer.AiServices;
 using Spectre.Console;
 
 static void WriteDivider(string text)

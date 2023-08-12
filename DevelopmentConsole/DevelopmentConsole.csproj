@@ -6,6 +6,8 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <UserSecretsId>b0a3a209-a669-4e3c-8bbb-3a9e5a66f1c6</UserSecretsId>
+        <AssemblyName>AbottiDevelopmentConsole</AssemblyName>
+        <RootNamespace>Abotti.DevelopmentConsole</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

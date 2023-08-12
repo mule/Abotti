@@ -1,9 +1,10 @@
 using System.IO.Abstractions;
-using ChatGptBlazorCore.Models;
-using ChatGptBlazorCore.QueryResults;
+using Abotti.Core.Models;
+using Abotti.Core.QueryResults;
+using Abotti.Core.Repositories;
 using Serilog;
 
-namespace DataAccessLayer.Repositories;
+namespace Abotti.DataAccessLayer.Repositories;
 
 public class ChatSessionFileRepository : FileSystemRepository<Guid, ChatSession>, IChatSessionRepository
 {

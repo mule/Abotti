@@ -1,0 +1,90 @@
+@page "/userprofile/{UserId:guid}"
+@using Abotti.Core.Models
+@using Abotti.Core.Repositories
+@using Blazored.Toast.Services
+@using System.Globalization
+@using Abotti.BlazorComponents
+@inject AuthenticationStateProvider AuthStateProvider
+@inject IToastService ToastService
+@inject IStringLocalizer<UserProfile> Loc
+@inject IUserRepository UserRepository
+@inject ILogger<UserProfile> Logger
+@inject NavigationManager NavigationManager
+
+<AuthorizeView>
+
+    <Authorized>
+        @if (IsCurrentUsersProfile)
+        {
+            <h3>@Loc["UserProfileHeading"]</h3>
+
+            <CultureSelector CurrentCulture=@CultureInfo.CurrentCulture SupportedCultures=@SupportedCultures OnNewCultureSelected="OnCultureSelected"/>
+        }
+        else
+        {
+            <h3 class="alert">@Loc["WrongProfile"]</h3>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <h3 class="alert">@Loc["NotAuthorized"]</h3>
+    </NotAuthorized>
+</AuthorizeView>
+
+@code {
+
+    [Parameter]
+    public Guid UserId { get; set; }
+
+    private User? CurrentUser { get; set; }
+
+    public bool IsCurrentUsersProfile { get; set; }
+
+    public CultureInfo[] SupportedCultures { get; set; } = {
+        new CultureInfo("en-US"),
+        new CultureInfo("fi-Fi")
+    };
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await AuthStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+        if (user.Identity.IsAuthenticated)
+        {
+            var userName = user.Identity.Name;
+
+            var userQuery = await UserRepository.GetByNameAsync(userName);
+            if (!userQuery.Ok)
+            {
+                foreach (var error in userQuery.Errors)
+                {
+                    ToastService.ShowError(error);
+                }
+            }
+
+            CurrentUser = userQuery.Result;
+            IsCurrentUsersProfile = CurrentUser.Id == UserId;
+        }
+    }
+
+    private async Task OnCultureSelected(CultureInfo culture)
+    {
+        Logger.LogDebug($"Culture {culture.Name} selected");
+        CurrentUser.PreferredLanguage = culture.Name;
+        var result = await UserRepository.UpdateAsync(CurrentUser);
+        if (!result.Ok)
+        {
+            foreach (var error in result.Errors)
+            {
+                Logger.LogError("Error updating user profile: {Error}", error);
+                ToastService.ShowError(error);
+            }
+        }
+        else
+        {
+            ToastService.ShowSuccess(Loc["CultureUpdated"]);
+            var currUrl = NavigationManager.Uri;
+            NavigationManager.NavigateTo(currUrl, true);
+        }
+    }
+
+}

@@ -1,9 +1,10 @@
+using Abotti.Core.Models;
+using Abotti.Core.QueryResults;
+using Abotti.Core.Repositories;
 using Azure.Storage.Blobs;
-using ChatGptBlazorCore.Models;
-using ChatGptBlazorCore.QueryResults;
 using Serilog;
 
-namespace DataAccessLayer.Repositories;
+namespace Abotti.DataAccessLayer.Repositories;
 
 public class ChatSessionBlobStorageRepository : BlobStorageRepository<Guid, ChatSession>, IChatSessionRepository
 {

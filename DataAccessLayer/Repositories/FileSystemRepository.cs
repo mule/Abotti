@@ -1,9 +1,10 @@
 using System.IO.Abstractions;
 using System.Text.Json;
-using ChatGptBlazorCore.Models;
+using Abotti.Core.Models;
+using Abotti.Core.Repositories;
 using Serilog;
 
-namespace DataAccessLayer.Repositories;
+namespace Abotti.DataAccessLayer.Repositories;
 
 public class FileSystemRepository<TK, T> : RepositoryBase<TK, T>, IInitializeableRepository<TK, T>
     where T : IModel<TK> where TK : notnull

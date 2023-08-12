@@ -1,0 +1,60 @@
+@using System.Globalization
+@using Microsoft.Extensions.Localization
+@inject IStringLocalizer<CultureSelector> Loc
+
+<p>
+    <label>
+        @Loc["lblLanguage"]
+        <select onchange="@OnCultureChanged">
+
+            @foreach (var culture in SupportedCultures)
+            {
+                <option @attributes="@GetOptionAttributes(culture, CurrentCulture)" value="@culture">@culture.DisplayName</option>
+            }
+        </select>
+    </label>
+</p>
+
+@code
+{
+
+    [Parameter]
+    public CultureInfo CurrentCulture { get; set; } = new("en-US");
+
+
+    [Parameter]
+    public CultureInfo[] SupportedCultures { get; set; } = Array.Empty<CultureInfo>();
+
+    [Parameter]
+    public EventCallback<CultureInfo> OnNewCultureSelected { get; set; }
+
+    private void OnCultureChanged(ChangeEventArgs e)
+    {
+        var culture = SupportedCultures.FirstOrDefault(c => c.Name == e.Value.ToString());
+        if (culture != null)
+        {
+            CurrentCulture = culture;
+
+            if (OnNewCultureSelected.HasDelegate)
+            {
+                OnNewCultureSelected.InvokeAsync(CurrentCulture);
+            }
+        }
+    }
+
+    private Dictionary<string, object> GetOptionAttributes(CultureInfo culture, CultureInfo currentCulture)
+    {
+        var attributes = new Dictionary<string, object>();
+        if (culture.Equals(CurrentCulture))
+        {
+            attributes.Add("selected", true);
+        }
+
+        return attributes;
+    }
+
+
+
+
+
+}
