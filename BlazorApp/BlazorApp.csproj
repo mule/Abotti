@@ -70,14 +70,6 @@
             <Generator>ResXFileCodeGenerator</Generator>
             <LastGenOutput>Chat.fi.Designer.cs</LastGenOutput>
         </EmbeddedResource>
-        <EmbeddedResource Update="Components\ChatSessionsList.resx">
-            <Generator>ResXFileCodeGenerator</Generator>
-            <LastGenOutput>ChatSessionsList.Designer.cs</LastGenOutput>
-        </EmbeddedResource>
-        <EmbeddedResource Update="Components\ChatSessionsList.fi.resx">
-            <Generator>ResXFileCodeGenerator</Generator>
-            <LastGenOutput>ChatSessionsList.Designer.cs</LastGenOutput>
-        </EmbeddedResource>
         <EmbeddedResource Update="Pages\UserProfile.resx">
             <Generator>ResXFileCodeGenerator</Generator>
             <LastGenOutput>UserProfile.Designer.cs</LastGenOutput>
@@ -109,6 +101,10 @@
             <AutoGen>True</AutoGen>
             <DependentUpon>Resource.en-US.resx</DependentUpon>
         </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Folder Include="Components\"/>
     </ItemGroup>
 
 </Project>

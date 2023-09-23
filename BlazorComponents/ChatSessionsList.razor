@@ -1,8 +1,9 @@
-@using Abotti.Core.QueryResults
-@using Blazored.Toast.Services
 @using System.Globalization
+@using Abotti.Core.QueryResults
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.Extensions.Localization
 @inject NavigationManager NavigationManager
-@inject IToastService ToastService
+
 @inject IStringLocalizer<ChatSessionsList> Loc
 
 <div class="sidebar">
@@ -52,7 +53,7 @@
     public EventCallback<Guid> OnDeleteSession { get; set; }
 
 
-    private void NavigateToNewChat()
+    private void NavigateToNewChat(MouseEventArgs e)
     {
         var sessionId = Guid.NewGuid();
         NavigationManager.NavigateTo($"/Chat/{sessionId}");

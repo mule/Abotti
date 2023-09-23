@@ -23,11 +23,33 @@
             <Generator>ResXFileCodeGenerator</Generator>
             <LastGenOutput>CultureSelector.Designer.cs</LastGenOutput>
         </EmbeddedResource>
+        <EmbeddedResource Update="ChatSessionsList.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>ChatSessionsList.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="ChatSessionsList.fi.resx">
+            <Generator>ResXFileCodeGenerator</Generator>
+            <LastGenOutput>ChatSessionsList.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.Components" Version="7.0.9"/>
         <PackageReference Include="Microsoft.Extensions.Localization" Version="7.0.9"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <AdditionalFiles Include="ChatSessionsList.razor"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\AbottiCore\AbottiCore.csproj"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <Reference Include="Microsoft.AspNetCore.Components.Web">
+            <HintPath>..\..\..\..\..\..\usr\local\share\dotnet\shared\Microsoft.AspNetCore.App\7.0.4\Microsoft.AspNetCore.Components.Web.dll</HintPath>
+        </Reference>
     </ItemGroup>
 
 </Project>
