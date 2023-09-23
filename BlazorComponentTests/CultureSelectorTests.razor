@@ -1,13 +1,14 @@
 @using FluentAssertions
-@using Xunit.Abstractions
 @using System.Globalization
 @using Abotti.BlazorComponents
+@using Xunit.Abstractions
 @inherits TestContext
+@inject ITestOutputHelper OutputHelper
 
 @code
 {
     private bool _commonSetupExecuted;
-    private readonly ITestOutputHelper _output;
+
 
     private readonly CultureInfo[] _supportedCultures =
     {
@@ -95,7 +96,7 @@
         }
         catch (Exception e)
         {
-            _output.WriteLine(cut.Markup);
+            OutputHelper?.WriteLine(cut.Markup);
         }
     }
 }
