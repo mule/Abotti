@@ -31,9 +31,15 @@ jobs:
         
       - name: Restore dependencies
         run: dotnet restore
+        
+      - name: Dotnet version
+        run: dotnet --version
+      
+      - name: Installed packages
+        run: dotnet list package
 
       - name: Build
-        run: dotnet build --configuration Debug
+        run: dotnet build --no-restore --configuration Debug
           
       # Set up Azurite using Docker
       - name: Set up Azurite
