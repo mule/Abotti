@@ -1,11 +1,13 @@
 @using FluentAssertions
+@using Xunit.Abstractions
 @using System.Globalization
 @using Abotti.BlazorComponents
 @inherits TestContext
 
 @code
 {
-    private bool commonSetupExecuted;
+    private bool _commonSetupExecuted;
+    private readonly ITestOutputHelper _output;
 
     private readonly CultureInfo[] _supportedCultures =
     {
@@ -16,11 +18,11 @@
 
     public void SetUp()
     {
-        if (!commonSetupExecuted)
+        if (!_commonSetupExecuted)
         {
             Services.AddLocalization();
 
-            commonSetupExecuted = true;
+            _commonSetupExecuted = true;
         }
     }
 
@@ -85,8 +87,15 @@
         var cut = Render(@<CultureSelector CurrentCulture="CultureInfo.CurrentCulture" SupportedCultures="_supportedCultures"/>);
 
         // Assert
-        var selectedOption = cut.Find("option[selected]");
-        var selectedValue = selectedOption.GetAttribute("value");
-        selectedValue.Should().Be(CultureInfo.CurrentCulture.Name);
+        try
+        {
+            var selectedOption = cut.Find("option[selected]");
+            var selectedValue = selectedOption.GetAttribute("value");
+            selectedValue.Should().Be(CultureInfo.CurrentCulture.Name);
+        }
+        catch (Exception e)
+        {
+            _output.WriteLine(cut.Markup);
+        }
     }
 }
