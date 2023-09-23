@@ -1,0 +1,91 @@
+@using FluentAssertions
+@using System.Globalization
+@using Abotti.BlazorComponents
+@inherits TestContext
+
+@code
+{
+    private bool commonSetupExecuted;
+
+    private readonly CultureInfo[] _supportedCultures =
+    {
+        new CultureInfo("en-FI"),
+        new CultureInfo("en-US"),
+        new CultureInfo("fi-FI")
+    };
+
+    public void SetUp()
+    {
+        if (!commonSetupExecuted)
+        {
+            Services.AddLocalization();
+
+            commonSetupExecuted = true;
+        }
+    }
+
+
+    [Fact]
+    public void CultureSelector_should_have_all_supported_cultures_as_selection_options()
+    {
+        // Arrange
+        SetUp();
+
+
+        // Act
+        var cut = Render(@<CultureSelector SupportedCultures="_supportedCultures"/>);
+
+        // Assert
+        var cultureSelection = cut.FindAll("option");
+        cultureSelection.Count.Should().Be(2);
+        cultureSelection[0].Attributes["value"].Value.Should().Be(_supportedCultures[0].Name);
+        cultureSelection[1].Attributes["value"].Value.Should().Be(_supportedCultures[1].Name);
+    }
+
+    [Fact]
+    public void CultureSelector_should_fire_culture_selected_event_when_selection_changes()
+    {
+        // Arrange
+        SetUp();
+        var eventFired = false;
+        var onNewCultureSelected = (CultureInfo culture) =>
+        {
+            culture.Should().Be(_supportedCultures[1]);
+            eventFired = true;
+        };
+
+        var cut = Render(@<CultureSelector CurrentCulture="CultureInfo.CurrentCulture" SupportedCultures="_supportedCultures" OnNewCultureSelected="onNewCultureSelected"/>);
+
+        // Act
+        cut.Find("select").Change(_supportedCultures[1].Name);
+        eventFired.Should().BeTrue();
+    }
+
+
+    [Fact]
+    public void CultureSelector_should_not_cause_errors_with_empty_supported_cultures()
+    {
+        // Arrange
+        SetUp();
+
+        // Act
+
+        var action = () => Render(@<CultureSelector CurrentCulture="CultureInfo.CurrentCulture"/>);
+        action.Should().NotThrow();
+    }
+
+    [Fact]
+    public void CultureSelector_should_always_have_current_culture_selected()
+    {
+        // Arrange
+        SetUp();
+
+        // Act
+        var cut = Render(@<CultureSelector CurrentCulture="CultureInfo.CurrentCulture" SupportedCultures="_supportedCultures"/>);
+
+        // Assert
+        var selectedOption = cut.Find("option[selected]");
+        var selectedValue = selectedOption.GetAttribute("value");
+        selectedValue.Should().Be(CultureInfo.CurrentCulture.Name);
+    }
+}

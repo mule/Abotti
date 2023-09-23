@@ -1,8 +1,8 @@
 using System.IO.Abstractions;
 using System.IO.Abstractions.TestingHelpers;
 using System.Text.Json;
-using ChatGptBlazorCore.Models;
-using DataAccessLayer.Repositories;
+using Abotti.Core.Models;
+using Abotti.DataAccessLayer.Repositories;
 using FluentAssertions;
 
 namespace DataAccessLayerTests;

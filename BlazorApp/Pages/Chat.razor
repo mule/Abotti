@@ -1,0 +1,322 @@
+@page "/Chat"
+@page "/Chat/{SessionId:guid}"
+@using Markdig
+@using Serilog
+@using Abotti.Core.Models
+@using Abotti.Core.QueryResults
+@using Abotti.Core.Repositories
+@using Abotti.ServiceAccessLayer.AiServices
+@using Blazored.Toast.Services
+@using Abotti.BlazorComponents
+@inject IJSRuntime JS
+@inject IOpenAiClient OpenAiClient
+@inject IToastService ToastService
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+@inject IUserRepository UserRepository
+@inject IChatSessionRepository ChatSessionRepository
+
+
+@inject IStringLocalizer<Chat> Loc
+
+
+<div class="row">
+    <div class="col-md-3">
+        <ChatSessionsList OnDeleteSession="DeleteSession" SessionTopics="@_sessionTopics"/>
+    </div>
+    <div class="col-md-9">
+        <div class="row">
+            <h3>@_currentSession?.Topic</h3>
+            <div class="d-flex">
+                @{
+                    if (_currentSession != null)
+                    {
+                        foreach (var tag in _currentSession.Tags)
+                        {
+                            <span class="badge rounded-pill bg-primary mx-2">@tag</span>
+                        }
+                    }
+                }
+            </div>
+
+        </div>
+        <div class="row">
+            <div id="chatOutput" class="overflow-y">
+                <ul style="max-width: 100em">
+                    @{
+                        if (_currentSession != null)
+                        {
+                            foreach (var reply in _currentSession.Entries)
+                            {
+                                var roleClass = GetRoleColor(reply.Role);
+
+                                var pipeline = new MarkdownPipelineBuilder()
+                                    .UseAdvancedExtensions()
+                                    .DisableHtml()
+                                    .UseBootstrap()
+                                    .Build();
+                                var contentHtml = Markdown.ToHtml(reply.Content, pipeline);
+
+
+                                <li>
+                                    <h5 class="@roleClass">@reply.Role:</h5>
+                                    <div>@((MarkupString)contentHtml)</div>
+                                </li>
+                            }
+                        }
+                    }
+                </ul>
+            </div>
+        </div>
+
+        <form onsubmit="@Send">
+            <div class="mb-3">
+                <textarea class="form-control"  id="chatInput" placeholder="@Loc["TextBoxPlaceHolder"]" @bind="_currentPrompt"></textarea>
+            </div>
+
+            <div class="col-md-2">
+                <button type="submit" class="form-control mt-2 btn btn-primary">@Loc["Send"]</button>
+            </div>
+        </form>
+        @if (_waitingForResponse)
+        {
+            <div class="row m-1">Waiting for response....</div>
+        }
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public Guid? SessionId { get; set; }
+
+    bool _waitingForResponse;
+    string _currentPrompt = "";
+    ChatSession? _currentSession;
+
+    TopicQueryResult[] _sessionTopics = Array.Empty<TopicQueryResult>();
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_currentSession != null && _currentSession.Entries.Count > 0)
+        {
+            await JS.InvokeVoidAsync("scrollToBottom");
+        }
+        await base.OnAfterRenderAsync(firstRender);
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var principal = authState.Result.User;
+
+
+        var queryResult = await
+            UserRepository.GetByNameAsync(principal.Identity.Name);
+
+        if (queryResult.Result != null)
+        {
+            var topicQueryResult = await ChatSessionRepository.GetTopicByUserIdsAsync(queryResult.Result.Id);
+            _sessionTopics = topicQueryResult.Result.OrderByDescending(topic => topic.Created).ToArray();
+        }
+
+        if (SessionId.HasValue)
+        {
+            var sessionQueryResult = await ChatSessionRepository.GetAsync(SessionId.Value);
+            if (sessionQueryResult.Result != null)
+            {
+                _currentSession = sessionQueryResult.Result;
+            }
+        }
+        else
+        {
+            SessionId = Guid.NewGuid();
+        }
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        var authState = AuthenticationStateProvider.GetAuthenticationStateAsync();
+        var principal = authState.Result.User;
+
+
+        var userQueryResult = await
+            UserRepository.GetByNameAsync(principal.Identity.Name);
+        if (SessionId.HasValue)
+        {
+            var queryResult = await ChatSessionRepository.GetAsync(SessionId.Value);
+            if (queryResult.Result != null)
+            {
+                _currentSession = queryResult.Result;
+            }
+            else
+            {
+                await StartNewSession(Guid.NewGuid(), userQueryResult.Result.Id);
+            }
+        }
+        else
+        {
+            await StartNewSession(Guid.NewGuid(), userQueryResult.Result.Id);
+        }
+
+        var topics = Array.Empty<TopicQueryResult>();
+        if (_currentSession != null)
+        {
+            topics = await GetSessionTopics(_currentSession.UserId);
+        }
+        _sessionTopics = topics.OrderByDescending(topic => topic.Created).ToArray();
+
+
+        await base.OnParametersSetAsync();
+    }
+
+    private async Task Send()
+    {
+        if (_currentPrompt == string.Empty)
+        {
+            return;
+        }
+
+        _waitingForResponse = true;
+
+
+        var replies = _currentSession.Entries.Select(e => (e.Role, e.Content)).ToList();
+        var result = await OpenAiClient.GetCompletionAsync(replies, _currentPrompt);
+
+        if (result.Success)
+        {
+            _currentSession.Entries.Add(new ChatEntry { Role = "user", Content = _currentPrompt });
+            _currentSession.Entries.Add(new ChatEntry { Role = "assistant", Content = result.Content });
+        }
+        else
+        {
+            ToastService.ShowError(result.Errors.First());
+        }
+        replies = _currentSession.Entries.Select(e => (e.Role, e.Content)).ToList();
+        var topicResponse = await OpenAiClient.GetChatTopicAsync(replies.ToArray());
+        if (topicResponse.Success)
+        {
+            _currentSession.Topic = topicResponse.Content;
+
+            var updatedTopics = await GetSessionTopics(_currentSession.UserId);
+            _sessionTopics = updatedTopics;
+        }
+        else
+        {
+            ToastService.ShowError(topicResponse.Errors.First());
+        }
+        var tags = await GetTagsAsync(_currentSession.Entries);
+
+        _currentSession.Tags = tags.Distinct().ToList();
+
+        var updateResult = await ChatSessionRepository.UpdateAsync(_currentSession);
+
+        if (!updateResult.Ok)
+        {
+            foreach (var error in updateResult.Errors)
+            {
+                ToastService.ShowError(error);
+            }
+        }
+
+        _currentPrompt = string.Empty;
+        _waitingForResponse = false;
+    }
+
+
+    private async Task<string[]> GetTagsAsync(IEnumerable<ChatEntry> entries)
+    {
+        var tags = Array.Empty<string>();
+        var messages = entries.Select(e => (e.Role, e.Content)).ToArray();
+        var response = await OpenAiClient.GetChatTagsAsync(messages);
+        if (response.Success)
+        {
+            var tagsString = response.Content;
+            tags = tagsString.Split(';');
+        }
+        else
+        {
+            ToastService.ShowError("Failed to fetch tags");
+
+            foreach (var error in response.Errors)
+            {
+                Log.Logger.Error("Failed to fetch tags: {Error}", error, error);
+            }
+        }
+
+
+        return tags;
+    }
+
+    private async Task<TopicQueryResult[]> GetSessionTopics(Guid userId)
+    {
+        var queryResult = await ChatSessionRepository.GetTopicByUserIdsAsync(userId);
+        return queryResult.Result.OrderByDescending(topic => topic.Created).ToArray();
+    }
+
+    private string GetRoleColor(string role)
+    {
+        return role switch
+        {
+            "user" => "text-secondary",
+            "assistant" => "text-success",
+            _ => "dark"
+            };
+    }
+
+    private async Task DeleteSession(Guid sessionId)
+    {
+        var deleteOpResult = await ChatSessionRepository.DeleteAsync(sessionId);
+
+        if (!deleteOpResult.Ok)
+        {
+            foreach (var error in deleteOpResult.Errors)
+            {
+                ToastService.ShowError(error);
+            }
+            return;
+        }
+
+        if (_currentSession.Id == sessionId)
+        {
+            NavigationManager.NavigateTo("/Chat");
+        }
+        else
+        {
+            var updatedTopics = await GetSessionTopics(_currentSession.UserId);
+            _sessionTopics = updatedTopics;
+        }
+    }
+
+
+    private async Task StartNewSession(Guid sessionId, Guid userId)
+    {
+        var newSession = new ChatSession
+        {
+            Id = sessionId,
+            UserId = userId,
+            Entries = new List<ChatEntry>(),
+            Created = DateTime.Now,
+            Topic = Loc["NewTopic"],
+            Tags = new List<string>()
+        };
+
+        _currentSession = newSession;
+        var addOpResult = await ChatSessionRepository.AddAsync(_currentSession);
+
+        if (!addOpResult.Ok)
+        {
+            foreach (var error in addOpResult.Errors)
+            {
+                ToastService.ShowError(error);
+            }
+        }
+
+        NavigationManager.NavigateTo($"/Chat/{sessionId}");
+    }
+
+
+
+
+}
