@@ -33,7 +33,7 @@ public class RepositoryCultureProvider : RequestCultureProvider
 
             try
             {
-                if (user != null)
+                if (user != null && !string.IsNullOrEmpty(user.PreferredLanguage))
                     culture = new CultureInfo(user.PreferredLanguage);
             }
             catch (CultureNotFoundException e)
