@@ -37,9 +37,10 @@
 
         // Assert
         var cultureSelection = cut.FindAll("option");
-        cultureSelection.Count.Should().Be(2);
+        cultureSelection.Count.Should().Be(3);
         cultureSelection[0].Attributes["value"].Value.Should().Be(_supportedCultures[0].Name);
         cultureSelection[1].Attributes["value"].Value.Should().Be(_supportedCultures[1].Name);
+        cultureSelection[2].Attributes["value"].Value.Should().Be(_supportedCultures[2].Name);
     }
 
     [Fact]
