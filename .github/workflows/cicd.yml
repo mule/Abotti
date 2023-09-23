@@ -26,8 +26,17 @@ jobs:
         with:
           dotnet-version: '7.0.x'  # Replace with your desired .NET version
 
+      - name: Clean up
+        run: dotnet clean --configuration Debug
+        
       - name: Restore dependencies
         run: dotnet restore
+        
+      - name: Dotnet version
+        run: dotnet --version
+      
+      - name: Installed packages
+        run: dotnet list package
 
       - name: Build
         run: dotnet build --no-restore --configuration Debug

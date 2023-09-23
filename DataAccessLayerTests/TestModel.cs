@@ -1,4 +1,4 @@
-using ChatGptBlazorCore.Models;
+using Abotti.Core.Models;
 
 namespace DataAccessLayerTests;
 

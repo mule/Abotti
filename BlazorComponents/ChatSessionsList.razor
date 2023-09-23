@@ -1,0 +1,77 @@
+@using System.Globalization
+@using Abotti.Core.QueryResults
+@using Microsoft.AspNetCore.Components.Web
+@using Microsoft.Extensions.Localization
+@inject NavigationManager NavigationManager
+
+@inject IStringLocalizer<ChatSessionsList> Loc
+
+<div class="sidebar">
+    <div class="nav-scrollable">
+        <div class="nav-item mb-2">
+            <button class="btn btn-primary" @onclick="NavigateToNewChat">@Loc["NewChat"]</button>
+        </div>
+        @{
+            var topicsGroupedByDate = SessionTopics.GroupBy(x => x.Created.Date);
+
+            foreach (var topicGroup in topicsGroupedByDate)
+            {
+                var topicGroupDateStr = topicGroup.Key.ToString("dd-MM-yyyy", CultureInfo.CurrentCulture);
+                <div class="row">
+                    <h6 class="nav-header">@topicGroupDateStr</h6>
+                </div>
+                foreach (var sessionTopic in topicGroup)
+                {
+                    <div class="row">
+                        <div class="col-md-10">
+                            <a href="@GetChatSessionLink(sessionTopic.Id)">
+                                <span class="" aria-hidden="true">@sessionTopic.Topic</span>
+                            </a>
+                        </div>
+                        <div class="col-md-1">
+                            <button class="btn btn-sm btn-danger mb-1"
+                                    data-toggle="tooltip"
+                                    data-placement="right"
+                                    title="Delete chat session"
+                                    @onclick="async () => await OnDeleteSession.InvokeAsync(sessionTopic.Id)">
+                                <span class="oi oi-trash"></span>
+                            </button>
+                        </div>
+                    </div>
+                }
+            }
+        }
+    </div>
+</div>
+
+@code {
+
+    [Parameter]
+    public TopicQueryResult[] SessionTopics { get; set; }
+
+    [Parameter]
+    public EventCallback<Guid> OnDeleteSession { get; set; }
+
+
+    private void NavigateToNewChat(MouseEventArgs e)
+    {
+        var sessionId = Guid.NewGuid();
+        NavigationManager.NavigateTo($"/Chat/{sessionId}");
+    }
+
+    private string GetChatSessionLink(Guid? sessionId)
+    {
+        if (sessionId == null)
+            return $"chat/{Guid.NewGuid()}";
+
+        return $"chat/{sessionId}";
+    }
+
+    private object GetSessionDescription(TopicQueryResult sessionTopic)
+    {
+        return $"{sessionTopic.Topic}";
+    }
+
+
+
+}

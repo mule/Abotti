@@ -1,8 +1,9 @@
 using System.IO.Abstractions;
-using ChatGptBlazorCore.Models;
+using Abotti.Core.Models;
+using Abotti.Core.Repositories;
 using Serilog;
 
-namespace DataAccessLayer.Repositories;
+namespace Abotti.DataAccessLayer.Repositories;
 
 public class UserFileRepository : FileSystemRepository<Guid, User>, IUserRepository
 {

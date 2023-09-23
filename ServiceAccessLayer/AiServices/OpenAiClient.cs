@@ -3,7 +3,7 @@ using Microsoft.Extensions.Logging;
 using OpenAI.Interfaces;
 using OpenAI.ObjectModels.RequestModels;
 
-namespace ServiceAccessLayer.AiServices;
+namespace Abotti.ServiceAccessLayer.AiServices;
 
 public class OpenAiClient : IOpenAiClient
 {

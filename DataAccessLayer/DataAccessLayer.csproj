@@ -4,10 +4,12 @@
         <TargetFramework>net7.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <AssemblyName>AbottiDataAccessLayer</AssemblyName>
+        <RootNamespace>Abotti.DataAccessLayer</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\ChatGptBlazorCore\ChatGptBlazorCore.csproj"/>
+        <ProjectReference Include="..\AbottiCore\AbottiCore.csproj"/>
     </ItemGroup>
 
     <ItemGroup>

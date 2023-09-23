@@ -1,10 +1,11 @@
 using System.Text;
 using System.Text.Json;
+using Abotti.Core.Models;
+using Abotti.Core.Repositories;
 using Azure.Storage.Blobs;
-using ChatGptBlazorCore.Models;
 using Serilog;
 
-namespace DataAccessLayer.Repositories;
+namespace Abotti.DataAccessLayer.Repositories;
 
 public class BlobStorageRepository<TK, T> : RepositoryBase<TK, T>, IInitializeableRepository<TK, T>
     where T : IModel<TK> where TK : notnull
