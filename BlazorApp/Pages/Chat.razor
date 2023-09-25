@@ -100,7 +100,7 @@
     {
         if (_currentSession != null && _currentSession.Entries.Count > 0)
         {
-            await JS.InvokeVoidAsync("scrollToBottom");
+            await JS.InvokeVoidAsync("scrollToBottom", "chatInput");
         }
         await base.OnAfterRenderAsync(firstRender);
     }
