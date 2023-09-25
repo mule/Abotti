@@ -1,3 +1,4 @@
-window.scrollToBottom = function () {
-    window.scrollTo(0, document.documentElement.scrollHeight);
+window.scrollToBottom = function (elementId) {
+    var element = document.getElementById(elementId);
+    element.scrollIntoView()
 };
