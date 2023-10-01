@@ -1,0 +1,69 @@
+@using FluentAssertions
+@using Abotti.BlazorComponents
+@inherits TestContext
+
+@code {
+
+    [Fact]
+    public void ChatSessionListRow_should_render_successfully()
+    {
+        // Arrange
+
+        // Act
+        var action = () => Render(@<ChatSessionListRow/>);
+
+        // Assert
+        action.Should().NotThrow();
+    }
+
+    [Fact]
+    public void ChatSessionListRow_should_show_chat_topic()
+    {
+        // Arrange
+        var testTopic = "Test topic";
+
+        // Act
+        var cut = Render(@<ChatSessionListRow Topic="@testTopic"/>);
+
+        // Assert
+        cut.Markup.Should().Contain(testTopic);
+    }
+
+    [Fact]
+    public void ChatSessionListRow_should_show_chat_session_id()
+    {
+        // Arrange
+        var testSessionId = Guid.NewGuid();
+
+        // Act
+        var cut = Render(@<ChatSessionListRow SessionId="@testSessionId"/>);
+
+        // Assert
+        cut.Markup.Should().Contain(testSessionId.ToString());
+    }
+
+    // Generate xunit test that tests deleting a chat session
+    [Fact]
+    public void ChatSessionListRow_should_s_delete_button()
+    {
+        // Arrange
+        var testSessionId = Guid.NewGuid();
+        var eventFired = false;
+
+        var deleteAction = (Guid sessionId) =>
+        {
+            sessionId.Should().Be(testSessionId);
+            eventFired = true;
+        };
+
+        // Act
+        var cut = Render(
+            @<CascadingValue Value="@deleteAction">
+                <ChatSessionListRow SessionId="@testSessionId"/>
+            </CascadingValue>);
+        var deleteButton = cut.Find("button");
+        deleteButton.Click();
+        eventFired.Should().BeTrue();
+    }
+
+}

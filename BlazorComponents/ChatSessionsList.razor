@@ -18,14 +18,20 @@
             {
                 var topicGroupDateStr = topicGroup.Key.ToString("dd-MM-yyyy", CultureInfo.CurrentCulture);
                 <div class="row">
-                    <h6 class="nav-header">@topicGroupDateStr</h6>
+                    <h6 class="nav-header">
+                        @topicGroupDateStr
+                        <button class="btn btn-sm btn-outline-secondary">
+                            <span class="oi oi-chevron-bottom"></span>
+                        </button>
+                    </h6>
+
                 </div>
                 foreach (var sessionTopic in topicGroup)
                 {
                     <div class="row">
                         <div class="col-md-10">
                             <a href="@GetChatSessionLink(sessionTopic.Id)">
-                                <span class="" aria-hidden="true">@sessionTopic.Topic</span>
+                                <span aria-hidden="true">@sessionTopic.Topic</span>
                             </a>
                         </div>
                         <div class="col-md-1">

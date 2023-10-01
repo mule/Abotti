@@ -1,0 +1,45 @@
+@using Abotti.Core.QueryResults
+<div class="row">
+    <h6 class="nav-header">
+        @GroupName
+        <button class="btn btn-sm btn-outline-secondary">
+            <span class="oi oi-chevron-bottom"></span>
+        </button>
+    </h6>
+</div>
+
+@foreach (var sessionTopic in SessionTopics)
+{
+    <div class="row">
+        <ChatSessionListRow Topic="@sessionTopic.Topic" SessionId="@sessionTopic.Id"/>
+    </div>
+}
+
+@code {
+
+    private bool _isCollapsed = true;
+
+    [Parameter]
+    public string GroupName { get; set; }
+
+    [Parameter]
+    public TopicQueryResult[] SessionTopics { get; set; }
+
+    [CascadingParameter]
+    public EventCallback<Guid> DeleteItem { get; set; }
+
+
+    private void ToggleCollapse()
+    {
+        _isCollapsed = !_isCollapsed;
+    }
+
+    private string GetChatSessionLink(Guid? sessionId)
+    {
+        if (sessionId == null)
+            return $"chat/{Guid.NewGuid()}";
+
+        return $"chat/{sessionId}";
+    }
+
+}
