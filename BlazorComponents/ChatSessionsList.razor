@@ -1,4 +1,5 @@
 @using System.Globalization
+@using Abotti.BlazorComponents.ViewModels
 @using Abotti.Core.QueryResults
 @using Microsoft.AspNetCore.Components.Web
 @using Microsoft.Extensions.Localization
@@ -11,52 +12,46 @@
         <div class="nav-item mb-2">
             <button class="btn btn-primary" @onclick="NavigateToNewChat">@Loc["NewChat"]</button>
         </div>
-        @{
-            var topicsGroupedByDate = SessionTopics.GroupBy(x => x.Created.Date);
 
-            foreach (var topicGroup in topicsGroupedByDate)
-            {
-                var topicGroupDateStr = topicGroup.Key.ToString("dd-MM-yyyy", CultureInfo.CurrentCulture);
-                <div class="row">
-                    <h6 class="nav-header">
-                        @topicGroupDateStr
-                        <button class="btn btn-sm btn-outline-secondary">
-                            <span class="oi oi-chevron-bottom"></span>
-                        </button>
-                    </h6>
-
-                </div>
-                foreach (var sessionTopic in topicGroup)
-                {
-                    <div class="row">
-                        <div class="col-md-10">
-                            <a href="@GetChatSessionLink(sessionTopic.Id)">
-                                <span aria-hidden="true">@sessionTopic.Topic</span>
-                            </a>
-                        </div>
-                        <div class="col-md-1">
-                            <button class="btn btn-sm btn-danger mb-1"
-                                    data-toggle="tooltip"
-                                    data-placement="right"
-                                    title="Delete chat session"
-                                    @onclick="async () => await OnDeleteSession.InvokeAsync(sessionTopic.Id)">
-                                <span class="oi oi-trash"></span>
-                            </button>
-                        </div>
-                    </div>
-                }
-            }
-        }
     </div>
 </div>
+
+@{
+    var todaysTopics = ChatSessionsListVm.GetTopicsOnDate(DateTime.Today).OrderByDescending(v => v.Created).ToArray();
+    var thisWeeksTopics = ChatSessionsListVm.GetTopicsOnWeek(DateTime.Today, new[] { DateTime.Today }).OrderByDescending(v => v.Created).ToArray();
+    var thisMonthsTopics = ChatSessionsListVm.GetTopicsOnMonth(DateTime.Today, true).OrderByDescending(v => v.Created).ToArray();
+}
+
+@if (todaysTopics.Length > 0)
+{
+    <ChatSessionsGroup GroupName=@Loc["Today"] SessionTopics="@todaysTopics" IsCollapsed="false"/>
+}
+
+
+@if (thisWeeksTopics.Length > 0)
+{
+    <ChatSessionsGroup GroupName=@Loc["EarlierThisWeek"] SessionTopics="@thisWeeksTopics"/>
+}
+
+@if (thisMonthsTopics.Length > 0)
+{
+    <ChatSessionsGroup GroupName=@Loc["EarlierThisMonth"] SessionTopics="@ChatSessionsListVm.GetTopicsOnMonth(DateTime.Today, true).OrderByDescending(v => v.Created).ToArray()"/>
+}
+
+@foreach (var group in ChatSessionsListVm.GroupTopicsByYearMonth(new (int year, int month)[] { (DateTime.Today.Year, DateTime.Today.Month) }))
+{
+    if (group.Item3.Any())
+    {
+        var groupName = $"{group.year} {CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(group.month)}";
+        <ChatSessionsGroup GroupName="@groupName" SessionTopics="@group.Item3.OrderByDescending(v => v.Created).ToArray()"/>
+    }
+}
+
 
 @code {
 
     [Parameter]
-    public TopicQueryResult[] SessionTopics { get; set; }
-
-    [Parameter]
-    public EventCallback<Guid> OnDeleteSession { get; set; }
+    public ChatSessionsListVm ChatSessionsListVm { get; set; }
 
 
     private void NavigateToNewChat(MouseEventArgs e)
@@ -77,6 +72,13 @@
     {
         return $"{sessionTopic.Topic}";
     }
+
+    private TopicQueryResult[] GetSessionTopicsFromThisWeek(TopicQueryResult[] sessionTopics)
+    {
+        var thisWeek = DateTime.Now.AddDays(-7);
+        return sessionTopics.Where(t => t.Created > thisWeek).ToArray();
+    }
+
 
 
 

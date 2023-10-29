@@ -1,0 +1,59 @@
+@using FluentAssertions
+@using AutoFixture
+@using BlazorComponentBus
+@using Abotti.BlazorComponents
+@using Abotti.Core.QueryResults
+@inherits TestContext
+
+@code {
+
+    [Fact]
+    public void ChatSessionsGroup_should_render_succesfully()
+    {
+        //Arrange
+        Services.AddScoped<ComponentBus>();
+
+        //Act
+
+        var act = () => Render(@<ChatSessionsGroup GroupName="Test group"/>);
+
+        //Assert
+        act.Should().NotThrow();
+    }
+
+    [Fact]
+    public void ChatSessionsGroup_should_render_group_name()
+    {
+        //Arrange
+        Services.AddScoped<ComponentBus>();
+
+        //Act
+
+        var cut = Render(@<ChatSessionsGroup GroupName="Test group"/>);
+
+        //Assert
+        cut.Markup.Should().Contain("Test group");
+    }
+
+    [Fact]
+    public void ChatSessionsGroup_should_render_given_topics()
+    {
+        //Arrange
+        Services.AddScoped<ComponentBus>();
+        var fixture = new Fixture();
+        var testTopics = fixture.CreateMany<TopicQueryResult>().ToArray();
+
+        //Act
+
+        var cut = Render(@<ChatSessionsGroup GroupName="Test group" SessionTopics="@testTopics"/>);
+
+        //Assert
+        foreach (var testTopic in testTopics)
+        {
+            //Markup should contain all topics
+            cut.Markup.Should().Contain(testTopic.Topic);
+        }
+    }
+
+
+}

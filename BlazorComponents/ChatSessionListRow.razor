@@ -1,4 +1,7 @@
+@using Abotti.BlazorComponents.Contracts
+@using BlazorComponentBus
 @using Microsoft.AspNetCore.Components.Web
+@inject ComponentBus Bus
 <div class="col-md-10">
     <a href="@GetChatSessionLink(SessionId)">
         <span aria-hidden="true">@Topic</span>
@@ -24,9 +27,6 @@
     [Parameter]
     public string Topic { get; set; }
 
-    [CascadingParameter]
-    public EventCallback<Guid> DeleteItem { get; set; }
-
 
     private string GetChatSessionLink(Guid? sessionId)
     {
@@ -38,7 +38,7 @@
 
     private async Task OnDeleteButtonClicked(MouseEventArgs e)
     {
-        await DeleteItem.InvokeAsync(SessionId);
+        await Bus.Publish(new ChatSessionDeleteRequest { SessionId = SessionId });
     }
 
 }

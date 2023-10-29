@@ -1,5 +1,7 @@
 @using FluentAssertions
+@using BlazorComponentBus
 @using Abotti.BlazorComponents
+@using Abotti.BlazorComponents.Contracts
 @inherits TestContext
 
 @code {
@@ -9,6 +11,7 @@
     {
         // Arrange
 
+        Services.AddScoped<ComponentBus>();
         // Act
         var action = () => Render(@<ChatSessionListRow/>);
 
@@ -21,6 +24,7 @@
     {
         // Arrange
         var testTopic = "Test topic";
+        Services.AddScoped<ComponentBus>();
 
         // Act
         var cut = Render(@<ChatSessionListRow Topic="@testTopic"/>);
@@ -34,6 +38,7 @@
     {
         // Arrange
         var testSessionId = Guid.NewGuid();
+        Services.AddScoped<ComponentBus>();
 
         // Act
         var cut = Render(@<ChatSessionListRow SessionId="@testSessionId"/>);
@@ -42,25 +47,27 @@
         cut.Markup.Should().Contain(testSessionId.ToString());
     }
 
-    // Generate xunit test that tests deleting a chat session
+
     [Fact]
-    public void ChatSessionListRow_should_s_delete_button()
+    public void ChatSessionListRow_should_publish_delete_event()
     {
         // Arrange
         var testSessionId = Guid.NewGuid();
         var eventFired = false;
+        Services.AddScoped<ComponentBus>();
 
-        var deleteAction = (Guid sessionId) =>
+        var bus = Services.GetService(typeof(ComponentBus)) as ComponentBus;
+
+        bus.Subscribe<ChatSessionDeleteRequest>(async (args, ct) =>
         {
-            sessionId.Should().Be(testSessionId);
             eventFired = true;
-        };
+            var msg = args.GetMessage<ChatSessionDeleteRequest>();
+            msg.SessionId.Should().Be(testSessionId);
+        });
 
         // Act
-        var cut = Render(
-            @<CascadingValue Value="@deleteAction">
-                <ChatSessionListRow SessionId="@testSessionId"/>
-            </CascadingValue>);
+        var cut = Render(@<ChatSessionListRow SessionId="@testSessionId"/>);
+
         var deleteButton = cut.Find("button");
         deleteButton.Click();
         eventFired.Should().BeTrue();

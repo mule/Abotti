@@ -11,6 +11,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\AbottiCore\AbottiCore.csproj"/>
+        <ProjectReference Include="..\BlazorComponents.Contracts\BlazorComponents.Contracts.csproj"/>
         <ProjectReference Include="..\BlazorComponents\BlazorComponents.csproj"/>
         <ProjectReference Include="..\DataAccessLayer\DataAccessLayer.csproj"/>
         <ProjectReference Include="..\ServiceAccessLayer\ServiceAccessLayer.csproj"/>
@@ -20,6 +21,7 @@
         <PackageReference Include="Azure.Extensions.AspNetCore.Configuration.Secrets" Version="1.2.2"/>
         <PackageReference Include="Azure.Identity" Version="1.10.1"/>
         <PackageReference Include="Blazored.Toast" Version="4.1.0"/>
+        <PackageReference Include="FluentDateTime" Version="2.1.0"/>
         <PackageReference Include="Markdig" Version="0.33.0"/>
         <PackageReference Include="Microsoft.AspNetCore.Authentication.OpenIdConnect" Version="7.0.11"/>
         <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="7.0.11"/>

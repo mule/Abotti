@@ -7,6 +7,7 @@ using Abotti.DataAccessLayer.Repositories;
 using Abotti.ServiceAccessLayer.AiServices;
 using Azure.Identity;
 using Azure.Storage.Blobs;
+using BlazorComponentBus;
 using Blazored.Toast;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.EntityFrameworkCore;
@@ -94,6 +95,7 @@ try
         provider.GetService<IOpenAIService>(),
         provider.GetService<ILogger<OpenAiClient>>(), Models.Gpt_4));
     builder.Services.AddBlazoredToast();
+    builder.Services.AddScoped<ComponentBus>();
     builder.Services.AddControllersWithViews(options => { }).AddMicrosoftIdentityUI();
 
     builder.Services.AddAuthorization(options =>

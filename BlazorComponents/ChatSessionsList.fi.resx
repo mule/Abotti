@@ -27,4 +27,16 @@
     <data name="NewChat" xml:space="preserve">
         <value>Uusi keskustelu</value>
     </data>
+    <data name="NewChat" xml:space="preserve">
+        <value>New chat</value>
+    </data>
+    <data name="Today" xml:space="preserve">
+        <value>Tänään</value>
+    </data>
+    <data name="EarlierThisWeek" xml:space="preserve">
+        <value>Aikaisemmin tällä viikolla</value>
+    </data>
+    <data name="EarlierThisMonth" xml:space="preserve">
+        <value>Aikaisemmin tässä kuussa</value>
+    </data>
 </root>

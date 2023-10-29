@@ -1,0 +1,36 @@
+@using FluentAssertions
+@using BlazorComponentBus
+@using Abotti.BlazorComponents
+@inherits TestContext
+
+
+@code {
+
+    private bool _commonSetupExecuted;
+
+    public void SetUp()
+    {
+        if (!_commonSetupExecuted)
+        {
+            Services.AddLocalization();
+
+            _commonSetupExecuted = true;
+        }
+    }
+
+    [Fact]
+    public void ChatSessionsList_should_render_successfully()
+    {
+        //Arrange
+        Services.AddScoped<ComponentBus>();
+        SetUp();
+
+
+        //Act
+        var act = () => Render(@<ChatSessionsList/>);
+
+        //Assert
+        act.Should().NotThrow();
+    }
+
+}
