@@ -114,7 +114,6 @@
         var authState = AuthenticationStateProvider.GetAuthenticationStateAsync();
         var principal = authState.Result.User;
 
-
         var queryResult = await
             UserRepository.GetByNameAsync(principal.Identity.Name);
 
@@ -291,6 +290,7 @@
         {
             var updatedTopics = await GetSessionTopics(_currentSession.UserId);
             _chatSessionsListVm = new ChatSessionsListVm(updatedTopics);
+            InvokeAsync(StateHasChanged);
         }
     }
 

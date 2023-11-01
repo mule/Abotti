@@ -45,7 +45,7 @@
 
         //Act
 
-        var cut = Render(@<ChatSessionsGroup GroupName="Test group" SessionTopics="@testTopics"/>);
+        var cut = Render(@<ChatSessionsGroup GroupName="Test group" SessionTopics="@testTopics" IsCollapsed="false"/>);
 
         //Assert
         foreach (var testTopic in testTopics)

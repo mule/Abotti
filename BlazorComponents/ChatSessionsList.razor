@@ -17,9 +17,10 @@
 </div>
 
 @{
-    var todaysTopics = ChatSessionsListVm.GetTopicsOnDate(DateTime.Today).OrderByDescending(v => v.Created).ToArray();
-    var thisWeeksTopics = ChatSessionsListVm.GetTopicsOnWeek(DateTime.Today, new[] { DateTime.Today }).OrderByDescending(v => v.Created).ToArray();
-    var thisMonthsTopics = ChatSessionsListVm.GetTopicsOnMonth(DateTime.Today, true).OrderByDescending(v => v.Created).ToArray();
+    //Ref date is not necessarily today, but calling it today anyway
+    var todaysTopics = ChatSessionsListVm.GetTopicsOnDate(ReferenceDate).OrderByDescending(v => v.Created).ToArray();
+    var thisWeeksTopics = ChatSessionsListVm.GetTopicsOnWeek(ReferenceDate, new[] { ReferenceDate }).OrderByDescending(v => v.Created).ToArray();
+    var thisMonthsTopics = ChatSessionsListVm.GetTopicsOnMonth(ReferenceDate, true).OrderByDescending(v => v.Created).ToArray();
 }
 
 @if (todaysTopics.Length > 0)
@@ -38,7 +39,7 @@
     <ChatSessionsGroup GroupName=@Loc["EarlierThisMonth"] SessionTopics="@ChatSessionsListVm.GetTopicsOnMonth(DateTime.Today, true).OrderByDescending(v => v.Created).ToArray()"/>
 }
 
-@foreach (var group in ChatSessionsListVm.GroupTopicsByYearMonth(new (int year, int month)[] { (DateTime.Today.Year, DateTime.Today.Month) }))
+@foreach (var group in ChatSessionsListVm.GroupTopicsByYearMonth(new (int year, int month)[] { (ReferenceDate.Year, ReferenceDate.Month) }))
 {
     if (group.Item3.Any())
     {
@@ -51,7 +52,10 @@
 @code {
 
     [Parameter]
-    public ChatSessionsListVm ChatSessionsListVm { get; set; }
+    public ChatSessionsListVm ChatSessionsListVm { get; set; } = new();
+
+    [Parameter]
+    public DateTime ReferenceDate { get; set; } = DateTime.Today;
 
 
     private void NavigateToNewChat(MouseEventArgs e)

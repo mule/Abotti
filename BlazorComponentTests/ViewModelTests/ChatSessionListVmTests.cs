@@ -1,33 +1,12 @@
+using Abotti.BlazorComponents.ViewModels;
+using Abotti.BlazorComponentTests.TestData;
 using Abotti.Core.QueryResults;
 using FluentAssertions;
-using FluentDateTime;
 
 namespace Abotti.BlazorAppTests.ViewModelTests;
 
 public class ChatSessionListVmTests
 {
-    //a date that is sunday
-    public static DateTime ReferenceDate = new(2021, 9, 12);
-
-    public static TopicQueryResult[] Topics =
-    {
-        //topics created on reference date
-        new TopicQueryResult(Guid.NewGuid(), "Topic 1", ReferenceDate),
-
-        //topics created reference day week
-        new TopicQueryResult(Guid.NewGuid(), "Topic 3", ReferenceDate.FirstDayOfWeek()),
-        new TopicQueryResult(Guid.NewGuid(), "Topic 4", ReferenceDate.AddDays(-1)),
-
-        //topics created in the same month as reference date but on reference date week
-        new TopicQueryResult(Guid.NewGuid(), "Topic 5", ReferenceDate.FirstDayOfMonth()),
-        new TopicQueryResult(Guid.NewGuid(), "Topic 6", ReferenceDate.FirstDayOfMonth().AddDays(1)),
-
-        //later topics
-        new TopicQueryResult(Guid.NewGuid(), "Topic 7", ReferenceDate.FirstDayOfMonth().AddDays(-2)),
-        new TopicQueryResult(Guid.NewGuid(), "Topic 8", ReferenceDate.FirstDayOfMonth().AddYears(-1))
-    };
-
-
     [Fact]
     public void ChatSessionListVm_Ctor_WithNullTopics_ShouldNotThrow()
     {
@@ -47,14 +26,16 @@ public class ChatSessionListVmTests
         // Arrange
 
 
-        var vm = new ChatSessionsListVm(Topics);
+        var vm = new ChatSessionsListVm(ChatSessionsListData.Topics);
 
 
         // Act
-        var topicsOnReferenceDate = vm.GetTopicsOnDate(ReferenceDate);
-        var laterTopicsOnReferenceDateWeek = vm.GetTopicsOnWeek(ReferenceDate, new[] { ReferenceDate });
-        var laterTopicsOnReferenceDateMonth = vm.GetTopicsOnMonth(ReferenceDate, true);
-        var laterTopics = vm.GroupTopicsByYearMonth(Topics, new[] { (ReferenceDate.Year, ReferenceDate.Month) });
+        var topicsOnReferenceDate = vm.GetTopicsOnDate(ChatSessionsListData.ReferenceDate);
+        var laterTopicsOnReferenceDateWeek = vm.GetTopicsOnWeek(ChatSessionsListData.ReferenceDate,
+            new[] { ChatSessionsListData.ReferenceDate });
+        var laterTopicsOnReferenceDateMonth = vm.GetTopicsOnMonth(ChatSessionsListData.ReferenceDate, true);
+        var laterTopics = vm.GroupTopicsByYearMonth(new[]
+            { (ChatSessionsListData.ReferenceDate.Year, ChatSessionsListData.ReferenceDate.Month) });
 
 
         // Assert
