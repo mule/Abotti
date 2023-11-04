@@ -6,7 +6,10 @@
 @using Abotti.Core.QueryResults
 @using Abotti.Core.Repositories
 @using Abotti.ServiceAccessLayer.AiServices
+@using BlazorComponentBus
 @using Blazored.Toast.Services
+@using Abotti.BlazorComponents.ViewModels
+@using Abotti.BlazorComponents.Contracts
 @using Abotti.BlazorComponents
 @inject IJSRuntime JS
 @inject IOpenAiClient OpenAiClient
@@ -15,6 +18,7 @@
 @inject AuthenticationStateProvider AuthenticationStateProvider
 @inject IUserRepository UserRepository
 @inject IChatSessionRepository ChatSessionRepository
+@inject ComponentBus Bus
 
 
 @inject IStringLocalizer<Chat> Loc
@@ -22,7 +26,7 @@
 
 <div class="row">
     <div class="col-md-3">
-        <ChatSessionsList OnDeleteSession="DeleteSession" SessionTopics="@_sessionTopics"/>
+        <ChatSessionsList ChatSessionsListVm="@_chatSessionsListVm"/>
     </div>
     <div class="col-md-9">
         <div class="row">
@@ -93,8 +97,7 @@
     bool _waitingForResponse;
     string _currentPrompt = "";
     ChatSession? _currentSession;
-
-    TopicQueryResult[] _sessionTopics = Array.Empty<TopicQueryResult>();
+    ChatSessionsListVm _chatSessionsListVm = new();
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
@@ -111,14 +114,13 @@
         var authState = AuthenticationStateProvider.GetAuthenticationStateAsync();
         var principal = authState.Result.User;
 
-
         var queryResult = await
             UserRepository.GetByNameAsync(principal.Identity.Name);
 
         if (queryResult.Result != null)
         {
             var topicQueryResult = await ChatSessionRepository.GetTopicByUserIdsAsync(queryResult.Result.Id);
-            _sessionTopics = topicQueryResult.Result.OrderByDescending(topic => topic.Created).ToArray();
+            _chatSessionsListVm = new ChatSessionsListVm(topicQueryResult.Result);
         }
 
         if (SessionId.HasValue)
@@ -133,6 +135,8 @@
         {
             SessionId = Guid.NewGuid();
         }
+
+        Bus.Subscribe<ChatSessionDeleteRequest>(ChatSessionDeleteRequestHandler);
     }
 
     protected override async Task OnParametersSetAsync()
@@ -165,7 +169,7 @@
         {
             topics = await GetSessionTopics(_currentSession.UserId);
         }
-        _sessionTopics = topics.OrderByDescending(topic => topic.Created).ToArray();
+        _chatSessionsListVm = new ChatSessionsListVm(topics);
 
 
         await base.OnParametersSetAsync();
@@ -200,7 +204,7 @@
             _currentSession.Topic = topicResponse.Content;
 
             var updatedTopics = await GetSessionTopics(_currentSession.UserId);
-            _sessionTopics = updatedTopics;
+            _chatSessionsListVm = new ChatSessionsListVm(updatedTopics);
         }
         else
         {
@@ -285,7 +289,8 @@
         else
         {
             var updatedTopics = await GetSessionTopics(_currentSession.UserId);
-            _sessionTopics = updatedTopics;
+            _chatSessionsListVm = new ChatSessionsListVm(updatedTopics);
+            InvokeAsync(StateHasChanged);
         }
     }
 
@@ -316,7 +321,10 @@
         NavigationManager.NavigateTo($"/Chat/{sessionId}");
     }
 
-
-
+    private async Task ChatSessionDeleteRequestHandler(MessageArgs args, CancellationToken ct)
+    {
+        var request = args.GetMessage<ChatSessionDeleteRequest>();
+        await DeleteSession(request.SessionId);
+    }
 
 }
