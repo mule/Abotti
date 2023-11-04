@@ -5,8 +5,8 @@ namespace Abotti.BlazorComponentTests.TestData;
 
 public class ChatSessionsListData
 {
-    //a date that is sunday
-    public static DateTime ReferenceDate = new(2021, 9, 12);
+    //a date that is saturday
+    public static DateTime ReferenceDate = new(2021, 9, 11);
 
     public static TopicQueryResult[] Topics =
     {
