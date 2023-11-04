@@ -27,4 +27,13 @@
     <data name="NewChat" xml:space="preserve">
         <value>New chat</value>
     </data>
+    <data name="Today" xml:space="preserve">
+        <value>Today</value>
+    </data>
+    <data name="EarlierThisWeek" xml:space="preserve">
+        <value>Earlier this week</value>
+    </data>
+    <data name="EarlierThisMonth" xml:space="preserve">
+        <value>Earlier this month</value>
+    </data>
 </root>

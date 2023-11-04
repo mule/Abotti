@@ -40,8 +40,8 @@
     public bool IsCurrentUsersProfile { get; set; }
 
     public CultureInfo[] SupportedCultures { get; set; } = {
-        new CultureInfo("en-US"),
-        new CultureInfo("fi-Fi")
+        new("en-US"),
+        new("fi-Fi")
     };
 
     protected override async Task OnInitializedAsync()

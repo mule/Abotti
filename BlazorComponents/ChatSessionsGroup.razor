@@ -1,0 +1,50 @@
+@using Abotti.Core.QueryResults
+<div class="row chat-sessions-group">
+    <h6 class="nav-header">
+        @GroupName
+        <button class="btn btn-sm btn-outline-secondary" onclick="@ToggleCollapse" title="Collapse/Expand Group">
+            <span class="oi @(IsCollapsed ? "oi-chevron-top" : "oi-chevron-bottom")"></span>
+        </button>
+    </h6>
+</div>
+
+@if (!IsCollapsed)
+{
+    foreach (var sessionTopic in SessionTopics)
+    {
+        <div class="row">
+            <ChatSessionListRow Topic="@sessionTopic.Topic" SessionId="@sessionTopic.Id"/>
+        </div>
+    }
+}
+
+@code {
+
+    [Parameter]
+    public bool IsCollapsed { get; set; } = true;
+
+    [Parameter]
+    public string GroupName { get; set; }
+
+    [Parameter]
+    public TopicQueryResult[] SessionTopics { get; set; } = Array.Empty<TopicQueryResult>();
+
+    protected override Task OnInitializedAsync()
+    {
+        return base.OnInitializedAsync();
+    }
+
+    private void ToggleCollapse()
+    {
+        IsCollapsed = !IsCollapsed;
+    }
+
+    private string GetChatSessionLink(Guid? sessionId)
+    {
+        if (sessionId == null)
+            return $"chat/{Guid.NewGuid()}";
+
+        return $"chat/{sessionId}";
+    }
+
+}

@@ -1,0 +1,44 @@
+@using Abotti.BlazorComponents.Contracts
+@using BlazorComponentBus
+@using Microsoft.AspNetCore.Components.Web
+@inject ComponentBus Bus
+<div class="col-md-10">
+    <a href="@GetChatSessionLink(SessionId)">
+        <span aria-hidden="true">@Topic</span>
+    </a>
+</div>
+<div class="col-md-1">
+    <button id="deleteBtn-@SessionId.ToString()" class="btn btn-sm btn-danger mb-1"
+            data-toggle="tooltip"
+            data-placement="right"
+            title="Delete chat session"
+            @onclick="OnDeleteButtonClicked">
+        <span class="oi oi-trash"></span>
+    </button>
+</div>
+
+@code {
+
+    [EditorRequired]
+    [Parameter]
+    public Guid SessionId { get; set; }
+
+    [EditorRequired]
+    [Parameter]
+    public string Topic { get; set; }
+
+
+    private string GetChatSessionLink(Guid? sessionId)
+    {
+        if (sessionId == null)
+            return $"chat/{Guid.NewGuid()}";
+
+        return $"chat/{sessionId}";
+    }
+
+    private async Task OnDeleteButtonClicked(MouseEventArgs e)
+    {
+        await Bus.Publish(new ChatSessionDeleteRequest { SessionId = SessionId });
+    }
+
+}
