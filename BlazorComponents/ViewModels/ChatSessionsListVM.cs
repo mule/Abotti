@@ -10,10 +10,13 @@ public class ChatSessionsListVm
         Topics = Array.Empty<TopicQueryResult>();
     }
 
-    public ChatSessionsListVm(TopicQueryResult[] topics)
+    public ChatSessionsListVm(TopicQueryResult[] topics, Guid? selectedTopicId)
     {
         Topics = topics;
+        SelectedTopicId = selectedTopicId;
     }
+
+    public Guid? SelectedTopicId { get; set; }
 
     public TopicQueryResult[] Topics { get; }
 

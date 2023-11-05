@@ -25,18 +25,18 @@
 
 @if (todaysTopics.Length > 0)
 {
-    <ChatSessionsGroup GroupName=@Loc["Today"] SessionTopics="@todaysTopics" IsCollapsed="false"/>
+    <ChatSessionsGroup GroupName=@Loc["Today"] SelectedSessionId="@ChatSessionsListVm.SelectedTopicId" SessionTopics="@todaysTopics" IsCollapsed="false"/>
 }
 
 
 @if (thisWeeksTopics.Length > 0)
 {
-    <ChatSessionsGroup GroupName=@Loc["EarlierThisWeek"] SessionTopics="@thisWeeksTopics"/>
+    <ChatSessionsGroup GroupName=@Loc["EarlierThisWeek"] SelectedSessionId="@ChatSessionsListVm.SelectedTopicId" SessionTopics="@thisWeeksTopics"/>
 }
 
 @if (thisMonthsTopics.Length > 0)
 {
-    <ChatSessionsGroup GroupName=@Loc["EarlierThisMonth"] SessionTopics="@ChatSessionsListVm.GetTopicsOnMonth(DateTime.Today, true).OrderByDescending(v => v.Created).ToArray()"/>
+    <ChatSessionsGroup GroupName=@Loc["EarlierThisMonth"] SelectedSessionId="@ChatSessionsListVm.SelectedTopicId" SessionTopics="@ChatSessionsListVm.GetTopicsOnMonth(DateTime.Today, true).OrderByDescending(v => v.Created).ToArray()"/>
 }
 
 @foreach (var group in ChatSessionsListVm.GroupTopicsByYearMonth(new (int year, int month)[] { (ReferenceDate.Year, ReferenceDate.Month) }))
@@ -44,7 +44,7 @@
     if (group.Item3.Any())
     {
         var groupName = $"{group.year} {CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(group.month)}";
-        <ChatSessionsGroup GroupName="@groupName" SessionTopics="@group.Item3.OrderByDescending(v => v.Created).ToArray()"/>
+        <ChatSessionsGroup GroupName="@groupName" SelectedSessionId="@ChatSessionsListVm.SelectedTopicId" SessionTopics="@group.Item3.OrderByDescending(v => v.Created).ToArray()"/>
     }
 }
 

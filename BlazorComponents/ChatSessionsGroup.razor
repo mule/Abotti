@@ -12,8 +12,9 @@
 {
     foreach (var sessionTopic in SessionTopics)
     {
+        var selected = SelectedSessionId == sessionTopic.Id;
         <div class="row">
-            <ChatSessionListRow Topic="@sessionTopic.Topic" SessionId="@sessionTopic.Id"/>
+            <ChatSessionListRow Topic="@sessionTopic.Topic" SessionId="@sessionTopic.Id" Selected="@selected"/>
         </div>
     }
 }
@@ -27,11 +28,22 @@
     public string GroupName { get; set; }
 
     [Parameter]
+    public Guid? SelectedSessionId { get; set; }
+
+    [Parameter]
     public TopicQueryResult[] SessionTopics { get; set; } = Array.Empty<TopicQueryResult>();
 
     protected override Task OnInitializedAsync()
     {
         return base.OnInitializedAsync();
+    }
+
+    protected override Task OnParametersSetAsync()
+    {
+        if (SessionTopics.Any(t => t.Id == SelectedSessionId))
+            IsCollapsed = false;
+
+        return base.OnParametersSetAsync();
     }
 
     private void ToggleCollapse()

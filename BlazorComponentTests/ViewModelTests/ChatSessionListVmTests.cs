@@ -12,9 +12,10 @@ public class ChatSessionListVmTests
     {
         // Arrange
         TopicQueryResult[] topics = null;
+        Guid? selectedTopicId = null;
 
         // Act
-        var act = () => new ChatSessionsListVm(topics);
+        var act = () => new ChatSessionsListVm(topics, selectedTopicId);
 
         // Assert
         act.Should().NotThrow();
@@ -26,7 +27,7 @@ public class ChatSessionListVmTests
         // Arrange
 
 
-        var vm = new ChatSessionsListVm(ChatSessionsListData.Topics);
+        var vm = new ChatSessionsListVm(ChatSessionsListData.Topics, null);
 
 
         // Act

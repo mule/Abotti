@@ -3,7 +3,7 @@
 @using Microsoft.AspNetCore.Components.Web
 @inject ComponentBus Bus
 <div class="col-md-10">
-    <a href="@GetChatSessionLink(SessionId)">
+    <a class="@Selected ? 'active' : ''" href="@GetChatSessionLink(SessionId)">
         <span aria-hidden="true">@Topic</span>
     </a>
 </div>
@@ -26,6 +26,9 @@
     [EditorRequired]
     [Parameter]
     public string Topic { get; set; }
+
+    [Parameter]
+    public bool Selected { get; set; } = false;
 
 
     private string GetChatSessionLink(Guid? sessionId)

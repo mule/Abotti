@@ -120,7 +120,7 @@
         if (queryResult.Result != null)
         {
             var topicQueryResult = await ChatSessionRepository.GetTopicByUserIdsAsync(queryResult.Result.Id);
-            _chatSessionsListVm = new ChatSessionsListVm(topicQueryResult.Result);
+            _chatSessionsListVm = new ChatSessionsListVm(topicQueryResult.Result, SessionId);
         }
 
         if (SessionId.HasValue)
@@ -169,7 +169,7 @@
         {
             topics = await GetSessionTopics(_currentSession.UserId);
         }
-        _chatSessionsListVm = new ChatSessionsListVm(topics);
+        _chatSessionsListVm = new ChatSessionsListVm(topics, SessionId);
 
 
         await base.OnParametersSetAsync();
@@ -204,7 +204,7 @@
             _currentSession.Topic = topicResponse.Content;
 
             var updatedTopics = await GetSessionTopics(_currentSession.UserId);
-            _chatSessionsListVm = new ChatSessionsListVm(updatedTopics);
+            _chatSessionsListVm = new ChatSessionsListVm(updatedTopics, SessionId);
         }
         else
         {
@@ -289,7 +289,7 @@
         else
         {
             var updatedTopics = await GetSessionTopics(_currentSession.UserId);
-            _chatSessionsListVm = new ChatSessionsListVm(updatedTopics);
+            _chatSessionsListVm = new ChatSessionsListVm(updatedTopics, SessionId);
             InvokeAsync(StateHasChanged);
         }
     }

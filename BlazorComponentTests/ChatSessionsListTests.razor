@@ -41,7 +41,7 @@
         //Arrange
         Services.AddScoped<ComponentBus>();
         SetUp();
-        var vm = new ChatSessionsListVm(ChatSessionsListData.Topics);
+        var vm = new ChatSessionsListVm(ChatSessionsListData.Topics, null);
 
 
         //Act
