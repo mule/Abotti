@@ -13,15 +13,22 @@ Dotnet SDK for OpenAI Chat GPT, Whisper, GPT-4 ,GPT-3 and DALL·E
 #### This library used be to known as `Betalgo.OpenAI.GPT3`, now it has a new package Id `Betalgo.OpenAI`.
 
 ## Checkout the wiki page: 
-https://github.com/betalgo/openai/wiki
+https://github.com/betalgo/openai/wiki  
+or  [![Static Badge](https://img.shields.io/badge/API%20Docs-RobiniaDocs-43bc00?logo=readme&logoColor=white)](https://www.robiniadocs.com/d/betalgo-openai/api/OpenAI.ObjectModels.RequestModels.ChatMessage.html)
 ## Checkout new ***experimantal*** utilities library:
 [![Betalgo.OpenAI.Utilities](https://img.shields.io/nuget/v/Betalgo.OpenAI.Utilities?style=for-the-badge)](https://www.nuget.org/packages/Betalgo.OpenAI.Utilities/)
-
 ```
 Install-Package Betalgo.OpenAI.Utilities
 ```
+Maintenance of this project is made possible by all the bug reporters, [contributors](https://github.com/betalgo/openai/graphs/contributors) and [sponsors](https://github.com/sponsors/kayhantolga).  
+💖 Sponsors:  
+[@betalgo](https://github.com/betalgo),
+[Laser Cat Eyes](https://lasercateyes.com/)
+
+[@oferavnery](https://github.com/oferavnery)
+[@Removable](https://github.com/Removable)
 ## Features
-- [X] [Function Calling] Beta Avaliable
+- [X] [Function Calling](https://github.com/betalgo/openai/wiki/Function-Calling)
 - [ ] Plugins (coming soon)
 - [x] [Chat GPT](https://github.com/betalgo/openai/wiki/Chat-GPT)
 - [x] [Chat GPT-4](https://github.com/betalgo/openai/wiki/Chat-GPT) *(models are supported, Image analyze API not released yet by OpenAI)*
@@ -32,7 +39,8 @@ Install-Package Betalgo.OpenAI.Utilities
 - [x] [Edit](https://github.com/betalgo/openai/wiki/Edit) 
 - [x] [Embeddings](https://github.com/betalgo/openai/wiki/Embeddings) 
 - [x] [Files](https://github.com/betalgo/openai/wiki/Files) 
-- [x] [Fine-tunes](https://github.com/betalgo/openai/wiki/Fine-Tuning) 
+- [x] [Chatgpt Fine-Tuning](https://github.com/betalgo/openai/wiki/Chatgpt-Fine-Tuning) 
+- [x] [Fine-tunes](https://github.com/betalgo/openai/wiki/Fine-Tuning)
 - [x] [Moderation](https://github.com/betalgo/openai/wiki/Moderation)
 - [x] [Tokenizer-GPT3](https://github.com/betalgo/openai/wiki/Tokenizer)
 - [ ] [Tokenizer](https://github.com/betalgo/openai/wiki/Tokenizer)
@@ -42,8 +50,6 @@ Install-Package Betalgo.OpenAI.Utilities
 
 
 For changelogs please go to end of the document.
-
-
 
 ## Sample Usages
 The repository contains a sample project named **OpenAI.Playground** that you can refer to for a better understanding of how the library works. However, please exercise caution while experimenting with it, as some of the test methods may result in unintended consequences such as file deletion or fine tuning.  
@@ -112,26 +118,55 @@ if (completionResult.Successful)
    Console.WriteLine(completionResult.Choices.First().Message.Content);
 }
 ```
-## Completions Sample
+## Function Sample
 ```csharp
-var completionResult = await openAiService.Completions.CreateCompletion(new CompletionCreateRequest()
-{
-    Prompt = "Once upon a time",
-    Model = Models.TextDavinciV3
-});
+var fn1 = new FunctionDefinitionBuilder("get_current_weather", "Get the current weather")
+            .AddParameter("location", PropertyDefinition.DefineString("The city and state, e.g. San Francisco, CA"))
+            .AddParameter("format", PropertyDefinition.DefineEnum(new List<string> { "celsius", "fahrenheit" }, "The temperature unit to use. Infer this from the users location."))
+            .Validate()
+            .Build();
 
-if (completionResult.Successful)
-{
-    Console.WriteLine(completionResult.Choices.FirstOrDefault());
-}
-else
-{
-    if (completionResult.Error == null)
-    {
-        throw new Exception("Unknown Error");
-    }
-    Console.WriteLine($"{completionResult.Error.Code}: {completionResult.Error.Message}");
-}
+        var fn2 = new FunctionDefinitionBuilder("get_n_day_weather_forecast", "Get an N-day weather forecast")
+            .AddParameter("location", new() { Type = "string", Description = "The city and state, e.g. San Francisco, CA" })
+            .AddParameter("format", PropertyDefinition.DefineEnum(new List<string> { "celsius", "fahrenheit" }, "The temperature unit to use. Infer this from the users location."))
+            .AddParameter("num_days", PropertyDefinition.DefineInteger("The number of days to forecast"))
+            .Validate()
+            .Build();
+        var fn3 = new FunctionDefinitionBuilder("get_current_datetime", "Get the current date and time, e.g. 'Saturday, June 24, 2023 6:14:14 PM'")
+            .Build();
+
+        var fn4 = new FunctionDefinitionBuilder("identify_number_sequence", "Get a sequence of numbers present in the user message")
+            .AddParameter("values", PropertyDefinition.DefineArray(PropertyDefinition.DefineNumber("Sequence of numbers specified by the user")))
+            .Build();
+
+        ConsoleExtensions.WriteLine("Chat Function Call Test:", ConsoleColor.DarkCyan);
+        var completionResult = await sdk.ChatCompletion.CreateCompletion(new ChatCompletionCreateRequest
+        {
+            Messages = new List<ChatMessage>
+                {
+                    ChatMessage.FromSystem("Don't make assumptions about what values to plug into functions. Ask for clarification if a user request is ambiguous."),
+                    ChatMessage.FromUser("Give me a weather report for Chicago, USA, for the next 5 days.")
+                },
+            Functions = new List<FunctionDefinition> { fn1, fn2, fn3, fn4 },
+            MaxTokens = 50,
+            Model = Models.Gpt_3_5_Turbo
+        });
+
+        if (completionResult.Successful)
+        {
+            var choice = completionResult.Choices.First();
+            Console.WriteLine($"Message:        {choice.Message.Content}");
+
+            var fn = choice.Message.FunctionCall;
+            if (fn != null)
+            {
+                Console.WriteLine($"Function call:  {fn.Name}");
+                foreach (var entry in fn.ParseArguments())
+                {
+                    Console.WriteLine($"  {entry.Key}: {entry.Value}");
+                }
+            }
+        }
 ```
 
 ## Completions Stream Sample
@@ -189,60 +224,24 @@ I will always be using the latest libraries, and future releases will frequently
 I am incredibly busy. If I forgot your name, please accept my apologies and let me know so I can add it to the list.
 
 ## Changelog
-### 7.1.2-beta
-- Bugfix https://github.com/betalgo/openai/pull/302
-- Added support for Function role https://github.com/betalgo/openai/issues/303
-### 7.1.0-beta
-- Function Calling: We're releasing this version to bring in a new feature that lets you call functions faster. But remember, this version might not be perfectly stable and we might change it a lot later. A big shout-out to @rzubek for helping us add this feature. Although I liked his work, I didn't have enough time to look into it thoroughly. Still, the tests I did showed it was working, so I decided to add his feature to our code. This lets everyone use it now. Even though I'm busy moving houses and didn't have much time, seeing @rzubek's help made things a lot easier for me.
-- Support for New Models: This update also includes support for new models that OpenAI recently launched. I've also changed the naming style to match OpenAI's. Model names will no longer start with 'chat'; instead, they'll start with 'gpt_3_5' and so on.
-### 7.0.0
-- The code now supports .NET 7.0. Big cheers to @BroMarduk for making this happen.
-- The library now automatically disposes of the Httpclient when it's created by the constructor. This feature is thanks to @BroMarduk.
-- New support has been added for using more than one instance at the same time. Check out this [link](https://github.com/betalgo/openai/wiki/Working-with-Multiple-Instances) for more details. Thanks to @remixtedi for bringing this to my attention.
-- A lot of small improvements have been done by @BroMarduk.
-- **Breaking Changes** 😢
-  - I've removed 'GPT3' from the namespace, so you might need to modify some aspects of your project. But don't worry, it's pretty simple! For instance, instead of writing `using OpenAI.GPT3.Interfaces`, you'll now write `using OpenAI.Interfaces`.
-  - The order of the OpenAI constructor parameters has changed. It now takes 'options' first, then 'httpclient'.
-    ```csharp
-	//Before
-	var openAiService = new OpenAIService(httpClient, options);
-	//Now
-	var openAiService = new OpenAIService(options, httpClient);
-	```
-### 6.8.6
-- Updated Azure OpenAI default API version to the preview version to support ChatGPT. thanks to all [issue reporters](https://github.com/betalgo/openai/issues/181)
-- Added support for an optional chat `name` field. thanks to @shanepowell
-- Breaking Change
-   - `FineTuneCreateRequest.PromptLossWeight` converto to float thanks to @JohnJ0808
-### 6.8.5
-- Mostly bug fixes
-- Fixed Moderation functions. https://github.com/betalgo/openai/issues/214 thanks to @scolmarg @AbdelAzizMohamedMousa @digitalvir
-- Added File Stream support for Whisper, Thanks to @Swimburger 
-- Fixed Whisper default response type, Thanks to @Swimburger 
-- Performance improvements and code clean up,again Thanks to @Swimburger 👏
-- Code clenaup, Thanks to @WeihanLi
-### 6.8.4
-- Released update message about nuget Package ID change
-### 6.8.3
-- **Breaking Changes**: 
-    - ~~I am going to update library namespace from `Betalgo.OpenAI.GPT3` to `OpenAI.GPT3`. This is the first time I am trying to update my nuget packageId. If something broken, please be patient. I will be fixing it soon.~~
-    Reverted namespace change, maybe next time.
-    - Small Typo change on model name `Model.GPT4` `to Model.GPT_4`
-
-    - `ServiceCollection.AddOpenAIService();` now returns `IHttpClientBuilder` which means it allows you to play with httpclient object. Thanks for all the reporters and @LGinC.
-    Here is a little sample
-```csharp
-ServiceCollection.AddOpenAIService()
-.ConfigurePrimaryHttpMessageHandler((s => new HttpClientHandler
-{
-    Proxy = new WebProxy("1.1.1.1:1010"),
-});
-``` 
-### 6.8.1
-- **Breaking Changes**: Typo fixed in Content Moderation CategoryScores, changing `Sexualminors` to `SexualMinors`. Thanks to @HowToDoThis.
-- Tokenizer changes thanks to @IS4Code.
-    - Performance improvement
-    - Introduced a new method `TokenCount` that returns the number of tokens instead of a list.
-    - **Breaking Changes**: Removed overridden methods that were basically string conversions. 
-    I think these methods were not used much and it is fairly easy to do these conversions outside of the method. 
-    If you disagree, let me know and I can consider adding them back.
+### Version 7.3.1
+- **Reverting a breking change which will be also Breaking Changes(only for 7.3.0):**
+    - Reverting the usage of `EnsureStatusCode()` which caused the loss of error information. Initially, I thought it would help in implementing HTTP retry tools, but now I believe it is a bad idea for two reasons.
+        1. You can't simply retry if the request wasn't successful because it could fail for various reasons. For example, you might have used too many tokens in your request, causing OpenAI to reject the response, or you might have tried to use a nonexistent model. It would be better to use the Error object in your retry rules. All responses are already derived from this base object.
+        2. We will lose error response data.
+### Version 7.3.0
+- Updated Moderation categories as reported by @dmki.
+- **Breaking Changes:**
+    - Introduced the use of `EnsureStatusCode()` after making requests.Please adjust your code accordingly for handling failure cases. Thanks to @miroljub1995 for reporting.
+    - Previously, we used to override paths in the base domain, but this behavior has now changed. If you were using `abc.com/mypath` as the base domain, we used to ignore `/mypath`. This will no longer be the case, and the code will now respect `/mypath`. Thanks to @Hzw576816 for reporting.
+### 7.2.0
+- Added Chatgpt Finetununig support thanks to @aghimir3 
+- Default Azure Openai version increased thanks to @mac8005
+- Fixed Azure Openai Audio endpoint thanks to @mac8005
+### 7.1.5
+- Added error handling for PlatformNotSupportedException in PostAsStreamAsync when using HttpClient.Send, now falls back to SendRequestPreNet6 for compatibility on platforms like MAUI, Mac. Thanks to  @Almis90
+- We now have a function caller describe method that automatically generates function descriptions. This method is available in the utilities library. Thanks to @vbandi
+### 7.1.3
+- This release was a bit late and took longer than expected due to a couple of reasons. The future was quite big, and I couldn't cover all possibilities. However, I believe I have covered most of the function definitions (with some details missing). Additionally, I added an option to build it manually. If you don't know what I mean, you don't need to worry. I plan to cover the rest of the function definition in the next release. Until then, you can discover this by playing in the playground or in the source code. This version also support using other libraries to export your function definition.
+- We now have support for functions! Big cheers to @rzubek for completing most of this feature.
+- Additionally, we have made bug fixes and improvements. Thanks to @choshinyoung, @yt3trees, @WeihanLi, @N0ker, and all the bug reporters. (Apologies if I missed any names. Please let me know if I missed your name and you have a commit.) 
