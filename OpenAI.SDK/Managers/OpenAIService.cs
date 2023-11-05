@@ -5,16 +5,15 @@ using OpenAI.Interfaces;
 
 namespace OpenAI.Managers;
 
-//TODO Find a way to show default request values in documentation
 public partial class OpenAIService : IOpenAIService, IDisposable
 {
+    private readonly bool _disposeHttpClient;
     private readonly IOpenAiEndpointProvider _endpointProvider;
     private readonly HttpClient _httpClient;
     private string? _defaultModelId;
-    private bool _disposeHttpClient;
 
     [ActivatorUtilitiesConstructor]
-    public OpenAIService(IOptions<OpenAiOptions> settings,HttpClient httpClient)
+    public OpenAIService(IOptions<OpenAiOptions> settings, HttpClient httpClient)
         : this(settings.Value, httpClient)
     {
     }
@@ -60,6 +59,15 @@ public partial class OpenAIService : IOpenAIService, IDisposable
         _defaultModelId = settings.DefaultModelId;
     }
 
+    /// <summary>
+    ///     Method to dispose the HttpContext if created internally.
+    /// </summary>
+    public void Dispose()
+    {
+        Dispose(true);
+        GC.SuppressFinalize(this);
+    }
+
 
     /// <inheritdoc />
     public IModelService Models => this;
@@ -75,6 +83,9 @@ public partial class OpenAIService : IOpenAIService, IDisposable
 
     /// <inheritdoc />
     public IFineTuneService FineTunes => this;
+
+    /// <inheritdoc />
+    public IFineTuningJobService FineTuningJob => this;
 
     /// <inheritdoc />
     public IModerationService Moderation => this;
@@ -107,15 +118,6 @@ public partial class OpenAIService : IOpenAIService, IDisposable
     public string? GetDefaultModelId()
     {
         return _defaultModelId;
-    }
-
-    /// <summary>
-    ///     Method to dispose the HttpContext if created internally.
-    /// </summary>
-    public void Dispose()
-    {
-        Dispose(true);
-        GC.SuppressFinalize(this);
     }
 
     protected virtual void Dispose(bool disposing)
